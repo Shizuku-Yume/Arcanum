@@ -15,6 +15,7 @@ const emit = defineEmits<{
   (e: 'deleteImage', id: number): void
   (e: 'reuse', image: GeneratedImage): void
   (e: 'download', image: GeneratedImage): void
+  (e: 'append-prompt', image: GeneratedImage): void
   (e: 'regenerate', batchId: string): void
 }>()
 
@@ -179,6 +180,7 @@ const getOriginalIndex = (tasks: GenerationTask[], colIndex: number, itemIndex: 
                   @delete="(id) => emit('deleteImage', id)"
                   @download="(img) => emit('download', img)"
                   @iterate="(img) => emit('reuse', img)"
+                  @append-prompt="(img) => emit('append-prompt', img)"
                 />
               </div>
             </div>

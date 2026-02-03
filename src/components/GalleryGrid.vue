@@ -14,6 +14,7 @@ const emit = defineEmits<{
   (e: 'deleteImage', id: number): void
   (e: 'iterate', image: GeneratedImage): void
   (e: 'download', image: GeneratedImage): void
+  (e: 'append-prompt', image: GeneratedImage): void
   (e: 'loadMore'): void
 }>()
 
@@ -102,6 +103,7 @@ const getOriginalIndex = (colIndex: number, itemIndex: number): number => {
           @delete="emit('deleteImage', $event)"
           @iterate="emit('iterate', $event)"
           @download="emit('download', $event)"
+          @append-prompt="emit('append-prompt', $event)"
         />
       </div>
     </div>
