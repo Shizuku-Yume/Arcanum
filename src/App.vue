@@ -13,6 +13,7 @@
             @open-api-config="showApiConfig = true"
         />
 
+
         <!-- Main Content Area -->
         <main class="sm:ml-16 pb-48 px-4 pt-16 sm:pt-6 relative z-10 flex justify-center">
             <div class="w-full max-w-6xl pt-6">
@@ -23,6 +24,8 @@
                         @toggle-favorite="handleToggleFavorite"
                         @delete-image="handleDeleteImage"
                         @reuse="handleReuse"
+                        @download="handleDownload"
+                        @append-prompt="handleAppendPrompt"
                     />
                     
                     <div v-if="activeBatches.length === 0" class="empty-state-container animate-fade-in">
@@ -70,6 +73,7 @@
                     @delete-image="handleDeleteImage"
                     @iterate="handleReuse"
                     @download="handleDownload"
+                    @append-prompt="handleAppendPrompt"
                     @load-more="loadMoreGallery"
                 />
 
@@ -95,6 +99,7 @@
                     @delete-image="handleDeleteImage"
                     @iterate="handleReuse"
                     @download="handleDownload"
+                    @append-prompt="handleAppendPrompt"
                 />
                     
                     <div v-if="favoriteImages.length === 0 && !isLoadingFavorites" class="empty-state-simple animate-fade-in">
@@ -170,6 +175,7 @@
             @favorite="handleToggleFavorite"
             @download="handleDownload"
             @iterate="handleReuse"
+            @append-prompt="handleAppendPrompt"
         />
 
         <ApiConfigModal
@@ -688,12 +694,17 @@ const handleDownload = async (image: GeneratedImage) => {
 }
 
 const handleReuse = (image: GeneratedImage) => {
-    prompt.value = image.prompt
     referenceImages.value = [image.url]
     selectedStyleId.value = image.styleId || null
     activeTab.value = 'create'
     lightbox.value.isOpen = false
     addToast('success', '已添加为参考图')
+}
+
+const handleAppendPrompt = (image: GeneratedImage) => {
+    prompt.value = prompt.value ? `${prompt.value}\n${image.prompt}` : image.prompt
+    activeTab.value = 'create'
+    lightbox.value.isOpen = false
 }
 
 const handleSavePreset = async (preset: Omit<StylePreset, 'id'>) => {
