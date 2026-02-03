@@ -50,6 +50,8 @@ const receivedMegabytes = computed(() => {
   return (bytes / (1024 * 1024)).toFixed(2)
 })
 
+const hasReceivedBytes = computed(() => (props.receivedBytes ?? 0) > 0)
+
 const handleFavorite = (e: Event) => {
   e.stopPropagation()
   if (props.image) emit('favorite', props.image.id)
@@ -85,8 +87,14 @@ const handleAppendPrompt = (e: Event) => {
     <div v-if="status === 'generating'" class="absolute inset-0 flex items-center justify-center bg-zinc-50 dark:bg-zinc-800 z-20">
       <div class="flex flex-col items-center gap-2">
         <div class="w-8 h-8 border-2 border-brand/30 dark:border-emerald-500/30 border-t-brand dark:border-t-emerald-500 rounded-full animate-spin"></div>
-        <div class="text-[11px] text-zinc-500 dark:text-zinc-400 font-mono">
-          已接收 {{ receivedMegabytes }} MB
+        <div v-if="hasReceivedBytes" class="flex flex-col items-center gap-0.5">
+          <div class="text-[10px] text-zinc-500 dark:text-zinc-400 tracking-wide">已接收</div>
+          <div class="text-sm text-zinc-700 dark:text-zinc-100 font-mono font-semibold">
+            {{ receivedMegabytes }} MB
+          </div>
+        </div>
+        <div v-else class="text-[11px] text-zinc-500 dark:text-zinc-300 font-medium">
+          请求中…
         </div>
       </div>
     </div>

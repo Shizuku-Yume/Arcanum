@@ -27,10 +27,13 @@ const toggleRatio = (ratio: string) => {
   if (index === -1) {
     newRatios.push(ratio)
   } else {
+    if (newRatios.length === 1) return
     newRatios.splice(index, 1)
   }
   emit('update:aspectRatios', newRatios)
 }
+
+const isRatioLocked = (ratio: string) => props.aspectRatios.length === 1 && props.aspectRatios[0] === ratio
 
 const selectResolution = (res: string) => {
   emit('update:resolution', res)
@@ -103,7 +106,8 @@ const sizeInfo = computed(() => {
           v-for="ratio in availableRatios"
           :key="ratio"
           @click="toggleRatio(ratio)"
-          class="flex flex-col items-center justify-center gap-1 rounded-neo h-11 border transition-all duration-200 cursor-pointer hover:-translate-y-[1px] active:scale-[0.98]"
+          :disabled="isRatioLocked(ratio)"
+          class="flex flex-col items-center justify-center gap-1 rounded-neo h-11 border transition-all duration-200 cursor-pointer hover:-translate-y-[1px] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:active:scale-100"
           :class="aspectRatios.includes(ratio)
             ? 'bg-brand-light dark:bg-emerald-900/30 border-brand dark:border-emerald-700 text-brand dark:text-emerald-400'
             : 'bg-zinc-50 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700'"

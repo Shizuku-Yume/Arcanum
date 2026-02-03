@@ -381,7 +381,11 @@ onMounted(async () => {
     // Load saved generation params
     const savedParams = LocalStorage.getGenerationParams()
     if (savedParams) {
-        params.value = savedParams
+        const restoredParams: GenerationParams = {
+            ...savedParams,
+            aspectRatios: savedParams.aspectRatios?.length ? savedParams.aspectRatios : ['1:1']
+        }
+        params.value = restoredParams
     }
     
     // Load saved Google Search setting
