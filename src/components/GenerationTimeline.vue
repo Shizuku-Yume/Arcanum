@@ -123,7 +123,7 @@ const getOriginalIndex = (tasks: GenerationTask[], colIndex: number, itemIndex: 
       <div class="mb-6 relative">
         <div class="hidden md:block absolute -left-[37px] top-1.5 w-4 h-4 rounded-full bg-brand border-4 border-white dark:border-zinc-900 shadow-sm z-10 transition-transform duration-300 group-hover:scale-110"></div>
         
-        <p class="text-zinc-800 text-base md:text-lg font-medium leading-relaxed max-w-4xl break-words">
+        <p class="text-zinc-800 dark:text-zinc-100 text-base md:text-lg font-medium leading-relaxed max-w-4xl break-words">
           {{ batch.prompt }}
         </p>
 
