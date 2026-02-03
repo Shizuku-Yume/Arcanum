@@ -15,6 +15,7 @@ export interface GenerationTask {
     resolution: Resolution
     data?: GeneratedImage
     error?: string
+    receivedBytes?: number
     createdAt: number
 }
 

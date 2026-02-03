@@ -174,6 +174,7 @@ const getOriginalIndex = (tasks: GenerationTask[], colIndex: number, itemIndex: 
                   :aspect-ratio="task.aspectRatio"
                   :image="task.data"
                   :error="task.error"
+                  :received-bytes="task.receivedBytes"
                   class="w-full transition-opacity duration-300"
                   @click="handleImageClick(groupTasks, task)"
                   @favorite="(id) => emit('toggleFavorite', id)"

@@ -8,6 +8,7 @@ interface Props {
   status: 'pending' | 'generating' | 'success' | 'error'
   aspectRatio: string
   error?: string
+  receivedBytes?: number
 }
 
 const props = defineProps<Props>()
@@ -44,6 +45,11 @@ const aspectRatioClass = computed(() => {
   }
 })
 
+const receivedMegabytes = computed(() => {
+  const bytes = props.receivedBytes ?? 0
+  return (bytes / (1024 * 1024)).toFixed(2)
+})
+
 const handleFavorite = (e: Event) => {
   e.stopPropagation()
   if (props.image) emit('favorite', props.image.id)
@@ -77,7 +83,12 @@ const handleAppendPrompt = (e: Event) => {
     @click="$emit('click')"
   >
     <div v-if="status === 'generating'" class="absolute inset-0 flex items-center justify-center bg-zinc-50 dark:bg-zinc-800 z-20">
-      <div class="w-8 h-8 border-2 border-brand/30 dark:border-emerald-500/30 border-t-brand dark:border-t-emerald-500 rounded-full animate-spin"></div>
+      <div class="flex flex-col items-center gap-2">
+        <div class="w-8 h-8 border-2 border-brand/30 dark:border-emerald-500/30 border-t-brand dark:border-t-emerald-500 rounded-full animate-spin"></div>
+        <div class="text-[11px] text-zinc-500 dark:text-zinc-400 font-mono">
+          已接收 {{ receivedMegabytes }} MB
+        </div>
+      </div>
     </div>
 
     <div v-else-if="status === 'error'" class="absolute inset-0 flex flex-col items-center justify-center bg-red-50 dark:bg-red-900/20 p-4 z-20">

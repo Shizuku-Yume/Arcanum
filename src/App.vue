@@ -590,6 +590,7 @@ async function processQueue(tasks: GenerationTask[], concurrency: number) {
 
 async function executeTask(task: GenerationTask) {
     task.status = 'generating'
+    task.receivedBytes = 0
     activeBatches.value = [...activeBatches.value]
     try {
         const result = await generateImage({
@@ -601,6 +602,9 @@ async function executeTask(task: GenerationTask) {
             aspectRatio: task.aspectRatio,
             imageSize: task.resolution,
             enableGoogleSearch: enableGoogleSearch.value
+        }, (receivedBytes) => {
+            task.receivedBytes = receivedBytes
+            activeBatches.value = [...activeBatches.value]
         })
         
         const imageUrl = result.imageUrls[0]
