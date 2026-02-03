@@ -13,6 +13,17 @@
             @open-api-config="showApiConfig = true"
         />
 
+        <a
+            href="https://github.com/Shizuku-Yume/Arcanum"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="fixed top-4 right-4 z-20 w-10 h-10 rounded-full bg-white/80 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 shadow-neo-lift dark:shadow-none backdrop-blur flex items-center justify-center text-zinc-700 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-white hover:shadow-neo-float transition-all duration-200"
+            aria-label="GitHub"
+            title="GitHub"
+        >
+            <Github class="w-5 h-5" />
+        </a>
+
 
         <!-- Main Content Area -->
         <main class="sm:ml-16 pb-48 px-4 pt-16 sm:pt-6 relative z-10 flex justify-center">
@@ -228,6 +239,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, shallowRef, watch } from 'vue'
+import { Github } from 'lucide-vue-next'
 import Sidebar from './components/Sidebar.vue'
 import CommandCenter from './components/CommandCenter.vue'
 import SettingsTray from './components/SettingsTray.vue'
