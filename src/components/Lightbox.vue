@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, computed } from 'vue';
-import { ChevronLeft, ChevronRight, X, Heart, Download, RefreshCw } from 'lucide-vue-next';
+import { ChevronLeft, ChevronRight, X, Heart, Download, RefreshCw, Copy } from 'lucide-vue-next';
 import type { GeneratedImage } from '../types';
 
 const props = defineProps<{
@@ -15,6 +15,7 @@ const emit = defineEmits<{
   (e: 'favorite', id: number): void;
   (e: 'download', image: GeneratedImage): void;
   (e: 'iterate', image: GeneratedImage): void;
+  (e: 'append-prompt', image: GeneratedImage): void;
 }>();
 
 const currentImage = computed(() => props.images[props.currentIndex]);
@@ -112,6 +113,14 @@ onUnmounted(() => {
           title="下载"
         >
           <Download class="w-5 h-5 md:w-5 md:h-5" />
+        </button>
+
+        <button 
+          @click="emit('append-prompt', currentImage)" 
+          class="p-2 text-white/80 hover:text-white transition-all duration-200 hover:scale-[1.03] active:scale-[0.98] min-w-[44px] min-h-[44px] flex items-center justify-center"
+          title="追加提示词"
+        >
+          <Copy class="w-5 h-5 md:w-5 md:h-5" />
         </button>
 
         <button 

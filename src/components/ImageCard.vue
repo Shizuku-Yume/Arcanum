@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Heart, Download, Trash2, RefreshCw } from 'lucide-vue-next'
+import { Heart, Download, Trash2, RefreshCw, Copy } from 'lucide-vue-next'
 import type { GeneratedImage } from '../types'
 
 interface Props {
@@ -18,6 +18,7 @@ const emit = defineEmits<{
   (e: 'download', image: GeneratedImage): void
   (e: 'delete', id: number): void
   (e: 'iterate', image: GeneratedImage): void
+  (e: 'append-prompt', image: GeneratedImage): void
 }>()
 
 const imageSize = ref('')
@@ -61,6 +62,11 @@ const handleDelete = (e: Event) => {
 const handleIterate = (e: Event) => {
   e.stopPropagation()
   if (props.image) emit('iterate', props.image)
+}
+
+const handleAppendPrompt = (e: Event) => {
+  e.stopPropagation()
+  if (props.image) emit('append-prompt', props.image)
 }
 </script>
 
@@ -114,6 +120,13 @@ const handleIterate = (e: Event) => {
             title="作为参考图使用"
           >
             <RefreshCw :size="16" />
+          </button>
+          <button 
+            @click="handleAppendPrompt"
+            class="p-2 bg-white/20 backdrop-blur rounded-full text-white transition-all duration-200 hover:bg-emerald-500 hover:scale-[1.05] active:scale-[0.98] min-w-[36px] min-h-[36px] flex items-center justify-center"
+            title="追加提示词"
+          >
+            <Copy :size="16" />
           </button>
           <button 
             @click="handleDownload"
