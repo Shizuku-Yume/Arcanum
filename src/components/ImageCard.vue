@@ -23,6 +23,7 @@ const emit = defineEmits<{
 }>()
 
 const imageSize = ref('')
+const receivedBytesThreshold = 0.01 * 1024 * 1024
 
 const onImageLoad = (event: Event) => {
   const img = event.currentTarget as HTMLImageElement | null
@@ -50,7 +51,7 @@ const receivedMegabytes = computed(() => {
   return (bytes / (1024 * 1024)).toFixed(2)
 })
 
-const hasReceivedBytes = computed(() => (props.receivedBytes ?? 0) > 0)
+const hasReceivedBytes = computed(() => (props.receivedBytes ?? 0) >= receivedBytesThreshold)
 
 const handleFavorite = (e: Event) => {
   e.stopPropagation()

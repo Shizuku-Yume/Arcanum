@@ -213,40 +213,49 @@ export async function generateImage(request: GenerateRequest, onProgress?: Progr
 
     const message = data.choices[0].message
     const imageUrls: string[] = []
+    const addImageUrl = (url: string) => {
+        if (!url || imageUrls.includes(url)) return
+        imageUrls.push(url)
+    }
 
     // 检查是否返回图片 (OpenAI/OpenRouter 格式：images 数组)
     if (Array.isArray(message.images)) {
         for (const img of message.images) {
             if (img?.image_url?.url) {
-                imageUrls.push(img.image_url.url)
+                addImageUrl(img.image_url.url)
             }
         }
     }
 
     // 检查content是否是base64图片（直接返回，可能包含多张）
-    if (typeof message.content === 'string' && message.content.startsWith('data:image/')) {
-        // 可能是多张 base64 图片，用正则提取
-        const base64Matches = message.content.match(/data:image\/[a-zA-Z0-9+]+;base64,[^\s"]+/g)
-        if (base64Matches) {
-            imageUrls.push(...base64Matches)
-        } else {
-            imageUrls.push(message.content)
+    const content = typeof message.content === 'string' ? message.content : ''
+    if (content) {
+        if (content.startsWith('data:image/')) {
+            const base64Matches = content.match(/data:image\/[a-zA-Z0-9+]+;base64,[^\s"]+/g) || []
+            if (base64Matches.length > 0) {
+                for (const match of base64Matches) {
+                    addImageUrl(match)
+                }
+            } else {
+                addImageUrl(content)
+            }
         }
-    }
 
-    // 检查content是否包含markdown格式的base64图片 ![image](data:image/...)
-    if (imageUrls.length === 0 && typeof message.content === 'string') {
-        const markdownImageMatches = message.content.matchAll(/!\[.*?\]\((data:image\/[^)]+)\)/g)
+        const markdownImageMatches = content.matchAll(/!\[.*?\]\((data:image\/[^)]+|https?:\/\/[^)\s]+)\)/g)
         for (const match of markdownImageMatches) {
-            imageUrls.push(match[1])
+            addImageUrl(match[1])
         }
-    }
 
-    // 检查content是否包含纯文本中的base64图片 data:image/...
-    if (imageUrls.length === 0 && typeof message.content === 'string') {
-        const base64Matches = message.content.match(/(data:image\/[a-zA-Z0-9+/;,=]+)/g)
-        if (base64Matches) {
-            imageUrls.push(...base64Matches)
+        const inlineBase64Matches = content.match(/(data:image\/[a-zA-Z0-9+/;,=]+)/g) || []
+        for (const match of inlineBase64Matches) {
+            addImageUrl(match)
+        }
+
+        if (imageUrls.length === 0) {
+            const urlMatches = content.matchAll(/https?:\/\/[^\s)"']+/g)
+            for (const match of urlMatches) {
+                addImageUrl(match[0])
+            }
         }
     }
 

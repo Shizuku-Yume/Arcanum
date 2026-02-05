@@ -16,7 +16,8 @@ const emit = defineEmits<{
   (e: 'reuse', image: GeneratedImage): void
   (e: 'download', image: GeneratedImage): void
   (e: 'append-prompt', image: GeneratedImage): void
-  (e: 'regenerate', batchId: string): void
+  (e: 'reuse-batch', batch: BatchInfo): void
+  (e: 'regenerate', batch: BatchInfo): void
 }>()
 
 const formatDate = (timestamp: number) => {
@@ -65,11 +66,7 @@ const handleImageClick = (tasks: GenerationTask[], clickedTask: GenerationTask) 
 }
 
 const handleBatchReuse = (batch: BatchInfo) => {
-  // Use the first successful image as reference for reuse if available
-  const firstImage = batch.tasks.find(t => t.data)?.data
-  if (firstImage) {
-    emit('reuse', firstImage)
-  }
+  emit('reuse-batch', batch)
 }
 
 // 计算列数
@@ -202,7 +199,7 @@ const getOriginalIndex = (tasks: GenerationTask[], colIndex: number, itemIndex: 
 
         <!-- Regenerate Button -->
         <button 
-          @click="emit('regenerate', batch.batchId)"
+          @click="emit('regenerate', batch)"
           class="flex items-center gap-2 text-sm text-brand dark:text-emerald-400 bg-brand-light dark:bg-emerald-900/30 hover:bg-brand-light/80 dark:hover:bg-emerald-900/50 hover:scale-[1.03] active:scale-[0.98] px-4 py-2 rounded-full transition-all duration-200 min-h-[44px] md:min-h-0"
         >
           <RotateCw :size="14" />

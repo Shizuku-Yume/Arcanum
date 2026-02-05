@@ -35,6 +35,8 @@
                         @toggle-favorite="handleToggleFavorite"
                         @delete-image="handleDeleteImage"
                         @reuse="handleReuse"
+                        @reuse-batch="handleBatchReuse"
+                        @regenerate="handleRegenerateBatch"
                         @download="handleDownload"
                         @append-prompt="handleAppendPrompt"
                     />
@@ -535,6 +537,9 @@ const handleGenerate = async () => {
     isGenerating.value = true
     const batchId = crypto.randomUUID()
     const tasks: GenerationTask[] = []
+    const promptSnapshot = prompt.value
+    const referenceSnapshot = referenceImages.value.length > 0 ? [...referenceImages.value] : undefined
+    const styleSnapshot = selectedStyleId.value || undefined
     
     for (const ratio of params.value.aspectRatios) {
         for (let i = 0; i < params.value.count; i++) {
@@ -543,9 +548,9 @@ const handleGenerate = async () => {
                 batchId,
                 status: 'pending',
                 aspectRatio: ratio,
-                prompt: prompt.value,
-                referenceImages: referenceImages.value.length > 0 ? [...referenceImages.value] : undefined,
-                styleId: selectedStyleId.value || undefined,
+                prompt: promptSnapshot,
+                referenceImages: referenceSnapshot ? [...referenceSnapshot] : undefined,
+                styleId: styleSnapshot,
                 resolution: params.value.resolution,
                 createdAt: Date.now()
             })
@@ -554,15 +559,17 @@ const handleGenerate = async () => {
     
     const batchInfo: BatchInfo = {
         batchId,
-        prompt: prompt.value,
-        styleId: selectedStyleId.value || undefined,
-        referenceImages: referenceImages.value.length > 0 ? [...referenceImages.value] : undefined,
+        prompt: promptSnapshot,
+        styleId: styleSnapshot,
+        referenceImages: referenceSnapshot ? [...referenceSnapshot] : undefined,
         createdAt: Date.now(),
         tasks
     }
     
     activeBatches.value = [batchInfo, ...activeBatches.value]
     activeTasks.value.push(...tasks)
+    prompt.value = ''
+    referenceImages.value = []
     
     try {
         await processQueue(tasks, MAX_CONCURRENT)
@@ -711,6 +718,23 @@ const handleDownload = async (image: GeneratedImage) => {
         addToast('error', '下载失败')
         console.error('Download failed:', err)
     }
+}
+
+const applyBatchToInput = (batch: BatchInfo) => {
+    prompt.value = batch.prompt
+    referenceImages.value = batch.referenceImages?.length ? [...batch.referenceImages] : []
+    selectedStyleId.value = batch.styleId || null
+    activeTab.value = 'create'
+    lightbox.value.isOpen = false
+}
+
+const handleBatchReuse = (batch: BatchInfo) => {
+    applyBatchToInput(batch)
+}
+
+const handleRegenerateBatch = async (batch: BatchInfo) => {
+    applyBatchToInput(batch)
+    await handleGenerate()
 }
 
 const handleReuse = (image: GeneratedImage) => {
