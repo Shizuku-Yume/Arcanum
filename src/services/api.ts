@@ -140,10 +140,14 @@ export async function generateImage(request: GenerateRequest, onProgress?: Progr
         }
     ]
 
+    // 多模态聊天模型 (Gemini, GPT-4o) 同时支持文本和图片输出
+    // 纯图像生成模型 (seedream, flux, dall-e 等) 只支持图片输出
+    const isMultimodalModel = /gemini|gpt-4o/i.test(modelId)
+
     payload = {
         model: modelId,
         messages,
-        modalities: ['image', 'text']
+        modalities: isMultimodalModel ? ['image', 'text'] : ['image']
     }
 
     // 构建 image_config
@@ -173,14 +177,29 @@ export async function generateImage(request: GenerateRequest, onProgress?: Progr
 
     let data: any
 
-    const response = await fetch(apiEndpoint, {
+    const fetchOptions = {
         method: 'POST',
         headers: {
             Authorization: `Bearer ${request.apikey}`,
             'Content-Type': 'application/json'
         },
         body: JSON.stringify(payload)
-    })
+    }
+
+    let response = await fetch(apiEndpoint, fetchOptions)
+
+    // modalities 不匹配时自动切换重试
+    if (!response.ok && response.status === 404) {
+        const errorText = await response.text()
+        if (errorText.includes('output modalities')) {
+            const altModalities = isMultimodalModel ? ['image'] : ['image', 'text']
+            payload.modalities = altModalities
+            fetchOptions.body = JSON.stringify(payload)
+            response = await fetch(apiEndpoint, fetchOptions)
+        } else {
+            throw new Error(`API error ${response.status}: ${errorText}`)
+        }
+    }
 
     if (!response.ok) {
         const errorText = await response.text()
