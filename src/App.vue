@@ -482,8 +482,9 @@ const handleFetchModels = async () => {
         }
 
         const models = await fetchModels(activeProvider.value.endpoint, apiKey.value)
+        const IMAGE_MODEL_PATTERN = /image|flux|seedream|dall-e|dalle|stable.?diffusion|sdxl|midjourney|banana|recraft|ideogram|playground/i
         const mappedModels = models.map(m => {
-            const supportsImages = m.id.toLowerCase().includes('image')
+            const supportsImages = IMAGE_MODEL_PATTERN.test(m.id)
             return {
                 id: m.id,
                 label: supportsImages
@@ -500,15 +501,15 @@ const handleFetchModels = async () => {
             mappedModels.unshift({
                 id: currentModel,
                 label: currentModel,
-                supportsImages: currentModel.toLowerCase().includes('image')
+                supportsImages: IMAGE_MODEL_PATTERN.test(currentModel)
             })
         }
 
-        // 排序：生图模型在前
+        // 排序：生图模型在前，组内按首字母排序
         modelOptions.value = mappedModels.sort((a, b) => {
             if (a.supportsImages && !b.supportsImages) return -1
             if (!a.supportsImages && b.supportsImages) return 1
-            return 0
+            return a.id.localeCompare(b.id)
         })
         LocalStorage.saveModelCache(activeProvider.value.endpoint, modelOptions.value)
     } catch (err) {

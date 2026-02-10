@@ -140,9 +140,8 @@ export async function generateImage(request: GenerateRequest, onProgress?: Progr
         }
     ]
 
-    // 多模态聊天模型 (Gemini, GPT-4o) 同时支持文本和图片输出
-    // 纯图像生成模型 (seedream, flux, dall-e 等) 只支持图片输出
-    const isMultimodalModel = /gemini|gpt-4o/i.test(modelId)
+    // 多模态聊天模型同时支持文本和图片输出，纯图像生成模型只支持图片输出
+    const isMultimodalModel = /gemini|gpt-4o|gpt.*image/i.test(modelId)
 
     payload = {
         model: modelId,
