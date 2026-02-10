@@ -101,13 +101,13 @@ const cycleTheme = () => {
   </aside>
   
   <!-- Mobile Header (Hidden on Desktop) -->
-  <header class="fixed top-0 left-0 right-0 h-16 bg-white/95 dark:bg-zinc-800/95 backdrop-blur-sm border-b border-zinc-200 dark:border-zinc-700 z-40 sm:hidden flex items-center justify-between px-4 animate-fade-in">
-    <div class="flex items-center gap-2">
+  <header class="fixed top-0 left-0 right-0 bg-white/95 dark:bg-zinc-800/95 backdrop-blur-sm border-b border-zinc-200 dark:border-zinc-700 z-40 sm:hidden flex items-center justify-between px-4 animate-fade-in safe-area-top" style="height: calc(4rem + env(safe-area-inset-top, 0px))">
+    <div class="flex items-center gap-2 pt-[env(safe-area-inset-top,0px)]">
       <span class="text-xl font-bold text-emerald-500">◆</span>
       <span class="font-bold text-zinc-800 dark:text-zinc-100">Arcanum</span>
     </div>
     
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-1 pt-[env(safe-area-inset-top,0px)]">
       <button 
         v-for="tab in tabs" 
         :key="tab.id"
@@ -118,6 +118,34 @@ const cycleTheme = () => {
         class="p-2 rounded-lg transition-all duration-200 active:scale-[0.98]"
       >
         <component :is="tab.icon" class="w-5 h-5" />
+      </button>
+      
+      <!-- Divider -->
+      <div class="w-px h-5 bg-zinc-200 dark:bg-zinc-700 mx-1"></div>
+      
+      <!-- Theme Toggle -->
+      <button 
+        @click="cycleTheme()"
+        class="p-2 rounded-lg text-zinc-500 dark:text-zinc-400 transition-all duration-200 active:scale-[0.98]"
+      >
+        <Monitor v-if="themeMode === 'system'" class="w-5 h-5" />
+        <Sun v-else-if="themeMode === 'light'" class="w-5 h-5" />
+        <Moon v-else class="w-5 h-5" />
+      </button>
+      
+      <!-- API Settings -->
+      <button 
+        @click="emit('openApiConfig')"
+        class="relative p-2 rounded-lg transition-all duration-200 active:scale-[0.98]"
+        :class="isConnected 
+          ? 'text-emerald-500' 
+          : 'text-red-500'"
+      >
+        <Settings class="w-5 h-5" />
+        <span 
+          class="absolute bottom-1.5 right-1.5 w-2 h-2 rounded-full border-2 border-white dark:border-zinc-800" 
+          :class="isConnected ? 'bg-emerald-500' : 'bg-red-500'"
+        ></span>
       </button>
     </div>
   </header>

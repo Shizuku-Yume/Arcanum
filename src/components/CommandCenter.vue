@@ -54,7 +54,7 @@ const totalGenerations = computed(() => {
 </script>
 
 <template>
-  <div class="fixed bottom-0 left-14 right-0 z-30 pb-5 px-4 pointer-events-none">
+  <div class="fixed bottom-0 left-0 sm:left-14 right-0 z-30 pb-5 px-4 pointer-events-none mobile-bottom-offset">
     <div class="w-full max-w-3xl mx-auto pointer-events-auto space-y-3 animate-slide-up">
       <div class="relative">
         <!-- Main Input Container -->
@@ -65,8 +65,8 @@ const totalGenerations = computed(() => {
               ref="inputRef"
               :value="prompt"
               @input="emit('update:prompt', ($event.target as HTMLTextAreaElement).value)"
-              class="w-full bg-transparent px-4 py-4 pl-20 pr-12 resize-none outline-none transition-all duration-200 placeholder-zinc-400 dark:placeholder-zinc-500 text-sm leading-6 text-zinc-900 dark:text-zinc-100"
-              :class="isExpanded ? 'h-44' : 'h-28'"
+              class="w-full bg-transparent px-4 py-4 pl-14 sm:pl-20 pr-12 resize-none outline-none transition-all duration-200 placeholder-zinc-400 dark:placeholder-zinc-500 text-sm leading-6 text-zinc-900 dark:text-zinc-100"
+              :class="isExpanded ? 'h-44' : 'h-24 sm:h-28'"
               placeholder="描述你想要的图像..."
               rows="4"
             ></textarea>
@@ -94,12 +94,12 @@ const totalGenerations = computed(() => {
           <div class="relative border-t border-zinc-200/60 dark:border-zinc-700/60 px-3 py-2">
             <div class="flex items-center justify-between gap-3">
               <!-- Left: Presets + Parameter Options -->
-              <div class="flex items-center gap-3 min-w-0">
+              <div class="flex items-center gap-1 sm:gap-3 min-w-0">
                 <slot name="presets"></slot>
 
                 <div class="relative">
-                  <div class="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
-                    <div class="flex items-center flex-wrap gap-1 max-w-[240px]">
+                  <div class="flex items-center gap-1 sm:gap-2 text-xs text-zinc-500 dark:text-zinc-400">
+                    <div class="flex items-center flex-wrap gap-1 max-w-[120px] sm:max-w-[240px]">
                       <button
                         v-for="ratio in aspectRatios"
                         :key="ratio"
@@ -132,7 +132,7 @@ const totalGenerations = computed(() => {
                         </span>
                       </button>
                     </div>
-                    <div class="w-px h-3 bg-zinc-300/80 dark:bg-zinc-600/80"></div>
+                    <div class="w-px h-3 bg-zinc-300/80 dark:bg-zinc-600/80 hidden sm:block"></div>
                     <button
                       @click="emit('update:showSettings', !showSettings)"
                       class="px-2 py-1 rounded-md transition-all active:scale-[0.98]"
@@ -142,7 +142,7 @@ const totalGenerations = computed(() => {
                     >
                       {{ resolution }}
                     </button>
-                    <div class="w-px h-3 bg-zinc-300/80 dark:bg-zinc-600/80"></div>
+                    <div class="w-px h-3 bg-zinc-300/80 dark:bg-zinc-600/80 hidden sm:block"></div>
                     <button
                       @click="emit('update:showSettings', !showSettings)"
                       class="px-2 py-1 rounded-md transition-all active:scale-[0.98]"
@@ -156,7 +156,7 @@ const totalGenerations = computed(() => {
 
                   <!-- Settings Panel (Compact Popover) -->
                   <div
-                    class="absolute bottom-full left-0 mb-2 w-[440px] max-w-[90vw] bg-white/95 dark:bg-zinc-800/95 backdrop-blur-sm rounded-neo border border-zinc-200/60 dark:border-zinc-700/60 shadow-neo-lift dark:shadow-neo-lift-dark p-4 transition-all duration-200 ease-out origin-bottom z-40"
+                    class="absolute bottom-full left-1/2 -translate-x-1/2 sm:left-0 sm:translate-x-0 mb-2 w-[calc(100vw-2rem)] sm:w-[440px] sm:max-w-[90vw] bg-white/95 dark:bg-zinc-800/95 backdrop-blur-sm rounded-neo border border-zinc-200/60 dark:border-zinc-700/60 shadow-neo-lift dark:shadow-neo-lift-dark p-4 transition-all duration-200 ease-out origin-bottom z-40 max-h-[50vh] overflow-y-auto"
                     :class="showSettings ? 'opacity-100 scale-100 translate-y-0' : 'pointer-events-none opacity-0 scale-95 translate-y-2'"
                   >
                     <slot name="settings"></slot>

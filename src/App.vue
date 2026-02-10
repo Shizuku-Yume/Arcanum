@@ -17,7 +17,7 @@
             href="https://github.com/Shizuku-Yume/Arcanum"
             target="_blank"
             rel="noopener noreferrer"
-            class="fixed top-4 right-4 z-20 w-10 h-10 rounded-full bg-white/80 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 shadow-neo-lift dark:shadow-none backdrop-blur flex items-center justify-center text-zinc-700 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-white hover:shadow-neo-float transition-all duration-200"
+            class="fixed top-4 right-4 z-20 w-10 h-10 rounded-full bg-white/80 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 shadow-neo-lift dark:shadow-none backdrop-blur flex items-center justify-center text-zinc-700 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-white hover:shadow-neo-float transition-all duration-200 hidden sm:flex"
             aria-label="GitHub"
             title="GitHub"
         >
@@ -26,8 +26,8 @@
 
 
         <!-- Main Content Area -->
-        <main class="sm:ml-16 pb-48 px-4 pt-16 sm:pt-6 relative z-10 flex justify-center">
-            <div class="w-full max-w-6xl pt-6">
+        <main class="sm:ml-16 pb-48 px-4 pt-16 sm:pt-6 relative z-10 flex justify-center mobile-main-offset safe-area-x">
+            <div class="w-full max-w-6xl pt-6 sm:pt-0">
                 <div v-if="activeTab === 'create'">
                     <GenerationTimeline 
                         :batches="activeBatches"

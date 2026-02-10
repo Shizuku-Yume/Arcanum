@@ -1,12 +1,20 @@
 <template>
-    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-sm animate-fade-in" @click.self="$emit('close')">
-        <div class="bg-white dark:bg-zinc-900 rounded-neo-lg shadow-neo-lift dark:shadow-none w-full max-w-6xl h-[85vh] flex flex-col border border-zinc-200 dark:border-zinc-700 overflow-hidden animate-scale-in">
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 bg-zinc-900/50 backdrop-blur-sm animate-fade-in" @click.self="$emit('close')">
+        <div class="bg-white dark:bg-zinc-900 rounded-none sm:rounded-neo-lg shadow-neo-lift dark:shadow-none w-full max-w-6xl h-full sm:h-[85vh] flex flex-col border-0 sm:border border-zinc-200 dark:border-zinc-700 overflow-hidden animate-scale-in">
             <!-- Header -->
-            <div class="p-4 border-b border-zinc-100 dark:border-zinc-700 flex justify-between items-center bg-zinc-50 dark:bg-zinc-800">
-                <div class="flex items-center gap-3">
-                    <h2 class="text-xl font-bold text-zinc-800 dark:text-zinc-100 flex items-center gap-2">
-                        <Library class="w-6 h-6 text-emerald-600 dark:text-emerald-400" /> 提示词仓库
+            <div class="p-4 border-b border-zinc-100 dark:border-zinc-700 flex flex-col sm:flex-row gap-3 sm:gap-0 sm:justify-between sm:items-center bg-zinc-50 dark:bg-zinc-800">
+                <div class="flex items-center justify-between sm:justify-start gap-3">
+                    <h2 class="text-lg sm:text-xl font-bold text-zinc-800 dark:text-zinc-100 flex items-center gap-2">
+                        <Library class="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600 dark:text-emerald-400" /> 提示词仓库
                     </h2>
+                    <button 
+                        @click="$emit('close')"
+                        class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all duration-200 text-zinc-500 dark:text-zinc-400 active:scale-[0.98] sm:hidden"
+                    >
+                        <X class="w-5 h-5" />
+                    </button>
+                </div>
+                <div class="flex items-center justify-between sm:justify-end gap-3">
                     <!-- Mode Toggle -->
                     <div class="flex bg-zinc-200 dark:bg-zinc-700 rounded-full p-0.5">
                         <button
@@ -28,13 +36,13 @@
                             图生图
                         </button>
                     </div>
+                    <button 
+                        @click="$emit('close')"
+                        class="w-8 h-8 hidden sm:flex items-center justify-center rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all duration-200 text-zinc-500 dark:text-zinc-400 active:scale-[0.98]"
+                    >
+                        <X class="w-5 h-5" />
+                    </button>
                 </div>
-                <button 
-                    @click="$emit('close')"
-                    class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all duration-200 text-zinc-500 dark:text-zinc-400 active:scale-[0.98]"
-                >
-                    <X class="w-5 h-5" />
-                </button>
             </div>
 
             <!-- Category Filter -->

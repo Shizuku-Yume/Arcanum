@@ -101,13 +101,13 @@ const sizeInfo = computed(() => {
   <div class="space-y-5 text-[11px]">
     <div class="space-y-2">
       <label class="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">宽高比</label>
-      <div class="grid grid-cols-10 gap-2">
+      <div class="grid grid-cols-5 sm:grid-cols-10 gap-2">
         <button
           v-for="ratio in availableRatios"
           :key="ratio"
           @click="toggleRatio(ratio)"
           :disabled="isRatioLocked(ratio)"
-          class="flex flex-col items-center justify-center gap-1 rounded-neo h-11 border transition-all duration-200 cursor-pointer hover:-translate-y-[1px] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:active:scale-100"
+          class="flex flex-col items-center justify-center gap-1 rounded-neo h-12 sm:h-11 border transition-all duration-200 cursor-pointer hover:-translate-y-[1px] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:active:scale-100"
           :class="aspectRatios.includes(ratio)
             ? 'bg-brand-light dark:bg-emerald-900/30 border-brand dark:border-emerald-700 text-brand dark:text-emerald-400'
             : 'bg-zinc-50 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700'"
@@ -127,7 +127,7 @@ const sizeInfo = computed(() => {
           v-for="res in resolutions"
           :key="res"
           @click="selectResolution(res)"
-          class="flex-1 py-2 text-xs rounded-lg transition-all duration-200 font-medium border hover:-translate-y-[1px] active:scale-[0.98]"
+          class="flex-1 py-2.5 sm:py-2 text-xs rounded-lg transition-all duration-200 font-medium border hover:-translate-y-[1px] active:scale-[0.98]"
           :class="resolution === res
             ? 'bg-white dark:bg-zinc-700 border-zinc-200 dark:border-zinc-600 text-zinc-800 dark:text-zinc-100'
             : 'bg-zinc-50 dark:bg-zinc-800 border-zinc-200/60 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'"

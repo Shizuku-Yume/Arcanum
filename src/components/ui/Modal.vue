@@ -47,7 +47,7 @@ onUnmounted(() => {
         @click="handleClose"
       >
         <div
-          class="relative w-full mx-4 bg-white dark:bg-zinc-900 rounded-neo-lg shadow-2xl p-6 border border-zinc-200 dark:border-zinc-700 animate-scale-in"
+          class="relative w-full mx-2 sm:mx-4 bg-white dark:bg-zinc-900 rounded-neo-lg shadow-2xl p-4 sm:p-6 border border-zinc-200 dark:border-zinc-700 animate-scale-in max-h-[90vh] overflow-y-auto"
           :class="width || 'max-w-lg'"
           @click.stop
         >

@@ -23,12 +23,12 @@ const getClassByType = (type: string) => {
 </script>
 
 <template>
-  <div class="fixed bottom-6 right-6 z-[60] flex flex-col gap-3 pointer-events-none">
+  <div class="fixed bottom-52 sm:bottom-6 right-4 sm:right-6 left-4 sm:left-auto z-[60] flex flex-col gap-3 pointer-events-none">
     <transition-group name="toast">
       <div 
         v-for="toast in toasts" 
         :key="toast.id"
-        class="pointer-events-auto bg-white dark:bg-zinc-800 rounded-neo px-4 py-3 shadow-neo-lift dark:shadow-none dark:border dark:border-zinc-700 min-w-[280px] flex items-center gap-3 animate-slide-up"
+        class="pointer-events-auto bg-white dark:bg-zinc-800 rounded-neo px-4 py-3 shadow-neo-lift dark:shadow-none dark:border dark:border-zinc-700 min-w-0 sm:min-w-[280px] flex items-center gap-3 animate-slide-up"
         :class="getClassByType(toast.type)"
       >
         <!-- Icons -->

@@ -68,7 +68,7 @@ onUnmounted(() => {
   <div v-if="isOpen" class="fixed inset-0 z-50 bg-zinc-900/95 backdrop-blur-sm flex items-center justify-center animate-fade-in">
     <button 
       @click="emit('close')" 
-      class="absolute top-4 right-4 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all duration-200 hover:scale-[1.03] active:scale-[0.98]"
+      class="absolute top-4 right-4 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all duration-200 hover:scale-[1.03] active:scale-[0.98] min-w-[44px] min-h-[44px] flex items-center justify-center z-10 safe-area-top safe-area-right"
     >
       <X class="w-6 h-6" />
     </button>
@@ -76,17 +76,17 @@ onUnmounted(() => {
     <button
       v-if="currentIndex > 0"
       @click="handleNavigate(-1)"
-      class="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all duration-200 hover:-translate-x-[2px] hover:scale-[1.03] active:scale-[0.98]"
+      class="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 p-2 sm:p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all duration-200 hover:-translate-x-[2px] hover:scale-[1.03] active:scale-[0.98] min-w-[44px] min-h-[44px] flex items-center justify-center"
     >
-      <ChevronLeft class="w-8 h-8" />
+      <ChevronLeft class="w-6 h-6 sm:w-8 sm:h-8" />
     </button>
 
     <button
       v-if="currentIndex < images.length - 1"
       @click="handleNavigate(1)"
-      class="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all duration-200 hover:translate-x-[2px] hover:scale-[1.03] active:scale-[0.98]"
+      class="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 p-2 sm:p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all duration-200 hover:translate-x-[2px] hover:scale-[1.03] active:scale-[0.98] min-w-[44px] min-h-[44px] flex items-center justify-center"
     >
-      <ChevronRight class="w-8 h-8" />
+      <ChevronRight class="w-6 h-6 sm:w-8 sm:h-8" />
     </button>
 
     <img
@@ -97,7 +97,7 @@ onUnmounted(() => {
       :key="currentImage.id"
     />
 
-    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-3 md:gap-4 bg-black/50 backdrop-blur rounded-full px-4 md:px-6 py-2 md:py-3 w-[90vw] md:w-auto justify-between md:justify-start animate-slide-up">
+    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-3 md:gap-4 bg-black/50 backdrop-blur rounded-full px-4 md:px-6 py-2 md:py-3 w-[90vw] md:w-auto justify-between md:justify-start animate-slide-up safe-area-bottom">
       <div class="flex items-center gap-3 md:gap-4">
         <button 
           @click="emit('favorite', currentImage.id)" 

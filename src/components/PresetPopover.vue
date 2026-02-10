@@ -97,10 +97,12 @@ const handleOpenWarehouse = () => {
     >
       <div
         v-if="isOpen"
-        class="absolute bottom-full left-0 mb-2 w-72 bg-white dark:bg-zinc-800 rounded-xl shadow-2xl dark:shadow-none border border-zinc-200 dark:border-zinc-700 overflow-hidden z-50"
+        class="fixed inset-x-0 bottom-0 sm:absolute sm:inset-x-auto sm:bottom-auto sm:bottom-full sm:left-0 sm:mb-2 w-full sm:w-72 bg-white dark:bg-zinc-800 rounded-t-2xl sm:rounded-xl shadow-2xl dark:shadow-none border border-zinc-200 dark:border-zinc-700 overflow-hidden z-50 max-h-[70vh] sm:max-h-none"
       >
         <!-- Header -->
-        <div class="p-3 border-b border-zinc-100 dark:border-zinc-700 flex items-center justify-between bg-zinc-50 dark:bg-zinc-800">
+        <div class="p-3 border-b border-zinc-100 dark:border-zinc-700 flex flex-col items-center bg-zinc-50 dark:bg-zinc-800">
+          <div class="w-8 h-1 rounded-full bg-zinc-300 dark:bg-zinc-600 mb-2 sm:hidden"></div>
+          <div class="flex items-center justify-between w-full">
           <h3 class="text-sm font-bold text-zinc-800 dark:text-zinc-100">提示词预设</h3>
           <button
             @click="isOpen = false"
@@ -108,6 +110,7 @@ const handleOpenWarehouse = () => {
           >
             <X class="w-4 h-4" />
           </button>
+          </div>
         </div>
 
         <!-- Preset List -->

@@ -97,10 +97,10 @@ watch(() => localModel.value, (val) => {
 
 <template>
   <div 
-    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-sm animate-fade-in"
+    class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-zinc-900/50 backdrop-blur-sm animate-fade-in"
     @click.self="$emit('close')"
   >
-    <div class="bg-white dark:bg-zinc-900 rounded-neo-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden border border-zinc-200 dark:border-zinc-700 animate-scale-in">
+    <div class="bg-white dark:bg-zinc-900 rounded-none sm:rounded-neo-lg shadow-2xl w-full sm:max-w-4xl h-full sm:max-h-[90vh] flex flex-col overflow-hidden border-0 sm:border border-zinc-200 dark:border-zinc-700 animate-scale-in">
       <!-- Header -->
       <div class="p-4 border-b border-zinc-200 dark:border-zinc-700 flex justify-between items-center bg-zinc-50 dark:bg-zinc-800">
         <h2 class="text-xl font-bold text-zinc-800 dark:text-zinc-100">API 配置</h2>

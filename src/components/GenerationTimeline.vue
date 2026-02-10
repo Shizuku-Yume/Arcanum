@@ -73,8 +73,8 @@ const handleBatchReuse = (batch: BatchInfo) => {
 const columnCount = ref(4)
 const updateColumnCount = () => {
   const width = window.innerWidth
-  if (width < 640) columnCount.value = 1
-  else if (width < 768) columnCount.value = 2
+  if (width < 480) columnCount.value = 2
+  else if (width < 768) columnCount.value = 3
   else if (width < 1024) columnCount.value = 3
   else columnCount.value = 4
 }
