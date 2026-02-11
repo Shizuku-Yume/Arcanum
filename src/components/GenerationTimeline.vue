@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from 'vue'
-import { RotateCw, RefreshCcw } from 'lucide-vue-next'
+import { RotateCw, RefreshCcw, X, Download, ImagePlus } from 'lucide-vue-next'
 import type { BatchInfo, GeneratedImage, GenerationTask } from '../types'
 import { styleTemplates } from '../data/templates'
 import ImageCard from './ImageCard.vue'
@@ -18,7 +18,42 @@ const emit = defineEmits<{
   (e: 'append-prompt', image: GeneratedImage): void
   (e: 'reuse-batch', batch: BatchInfo): void
   (e: 'regenerate', batch: BatchInfo): void
+  (e: 'add-reference', url: string): void
 }>()
+
+// Reference image preview state
+const refPreview = ref<{ isOpen: boolean; url: string }>({
+  isOpen: false,
+  url: ''
+})
+
+const openRefPreview = (url: string) => {
+  refPreview.value = { isOpen: true, url }
+}
+
+const closeRefPreview = () => {
+  refPreview.value = { isOpen: false, url: '' }
+}
+
+const downloadRefImage = (url: string) => {
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `arcanum-ref-${Date.now()}.png`
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
+
+const useAsReference = (url: string) => {
+  emit('add-reference', url)
+  closeRefPreview()
+}
+
+const handleRefPreviewKeydown = (e: KeyboardEvent) => {
+  if (refPreview.value.isOpen && e.key === 'Escape') {
+    closeRefPreview()
+  }
+}
 
 const formatDate = (timestamp: number) => {
   return new Intl.DateTimeFormat('zh-CN', {
@@ -82,10 +117,12 @@ const updateColumnCount = () => {
 onMounted(() => {
   updateColumnCount()
   window.addEventListener('resize', updateColumnCount)
+  window.addEventListener('keydown', handleRefPreviewKeydown)
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', updateColumnCount)
+  window.removeEventListener('keydown', handleRefPreviewKeydown)
 })
 
 // 将任务分配到各列，保持时间顺序
@@ -127,11 +164,15 @@ const getOriginalIndex = (tasks: GenerationTask[], colIndex: number, itemIndex: 
         <!-- Reference Images -->
         <div v-if="batch.referenceImages?.length" class="flex gap-2 mt-3 overflow-x-auto pb-1">
           <div 
-            v-for="(ref, idx) in batch.referenceImages" 
+            v-for="(refImg, idx) in batch.referenceImages" 
             :key="idx"
-            class="w-12 h-12 rounded-neo overflow-hidden border border-zinc-200 shrink-0 shadow-sm hover:scale-[1.05] active:scale-[0.98] transition-transform duration-200"
+            class="relative w-12 h-12 rounded-neo overflow-hidden border border-zinc-200 dark:border-zinc-700 shrink-0 shadow-sm hover:scale-[1.05] active:scale-[0.98] transition-transform duration-200 cursor-pointer group/ref"
+            @click="openRefPreview(refImg)"
           >
-            <img :src="ref" class="w-full h-full object-cover" alt="Reference" />
+            <img :src="refImg" class="w-full h-full object-cover" alt="Reference" />
+            <div class="absolute inset-0 bg-black/0 group-hover/ref:bg-black/30 transition-colors duration-200 flex items-center justify-center">
+              <ImagePlus :size="16" class="text-white opacity-0 group-hover/ref:opacity-100 transition-opacity duration-200 drop-shadow" />
+            </div>
           </div>
         </div>
 
@@ -208,4 +249,48 @@ const getOriginalIndex = (tasks: GenerationTask[], colIndex: number, itemIndex: 
       </div>
     </div>
   </div>
+
+  <!-- Reference Image Preview Overlay -->
+  <Teleport to="body">
+    <div 
+      v-if="refPreview.isOpen" 
+      class="fixed inset-0 z-50 bg-zinc-900/95 backdrop-blur-sm flex items-center justify-center animate-fade-in"
+      @click.self="closeRefPreview"
+    >
+      <div class="absolute top-4 right-4 z-10">
+        <button 
+          @click="closeRefPreview" 
+          class="p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all duration-200 hover:scale-[1.03] active:scale-[0.98] min-w-[44px] min-h-[44px] flex items-center justify-center"
+        >
+          <X class="w-6 h-6" />
+        </button>
+      </div>
+
+      <img
+        :src="refPreview.url"
+        alt="Reference"
+        class="max-w-[95vw] md:max-w-[90vw] max-h-[85vh] object-contain rounded-neo-lg shadow-2xl animate-scale-in"
+      />
+
+      <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-3 md:gap-4 bg-black/50 backdrop-blur rounded-full px-4 md:px-6 py-2 md:py-3 animate-slide-up safe-area-bottom">
+        <button 
+          @click="downloadRefImage(refPreview.url)" 
+          class="p-2 text-white/80 hover:text-white transition-all duration-200 hover:scale-[1.03] active:scale-[0.98] min-w-[44px] min-h-[44px] flex items-center justify-center"
+          title="下载"
+        >
+          <Download class="w-5 h-5" />
+        </button>
+
+        <div class="w-px h-4 bg-white/20"></div>
+
+        <button 
+          @click="useAsReference(refPreview.url)" 
+          class="p-2 text-white/80 hover:text-white transition-all duration-200 hover:scale-[1.03] active:scale-[0.98] min-w-[44px] min-h-[44px] flex items-center justify-center"
+          title="作为参考图使用"
+        >
+          <ImagePlus class="w-5 h-5" />
+        </button>
+      </div>
+    </div>
+  </Teleport>
 </template>

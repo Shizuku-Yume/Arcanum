@@ -39,6 +39,7 @@
                         @regenerate="handleRegenerateBatch"
                         @download="handleDownload"
                         @append-prompt="handleAppendPrompt"
+                        @add-reference="handleAddReference"
                     />
                     
                     <div v-if="activeBatches.length === 0" class="empty-state-container animate-fade-in">
@@ -78,53 +79,54 @@
                 </div>
 
                 <div v-else-if="activeTab === 'gallery'">
-                    <div class="mb-4 p-3 rounded-neo-lg border border-zinc-200 dark:border-zinc-700 bg-white/80 dark:bg-zinc-800/80 backdrop-blur-sm flex flex-wrap items-center gap-2">
+                    <div class="flex justify-end items-center gap-1 mb-3">
                         <template v-if="isGalleryBatchMode">
-                            <span class="mr-auto text-sm text-zinc-600 dark:text-zinc-300">
-                                已选择 {{ selectedGalleryImageIds.length }} 张
-                            </span>
+                            <span class="text-xs text-zinc-400 dark:text-zinc-500 mr-1 tabular-nums">{{ selectedGalleryImageIds.length }} 张</span>
                             <button
                                 @click="handleSelectAllGallery"
-                                class="px-3 py-1.5 text-sm rounded-full border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+                                class="batch-text-btn"
                             >
                                 全选
                             </button>
                             <button
                                 @click="handleInvertGallerySelection"
-                                class="px-3 py-1.5 text-sm rounded-full border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+                                class="batch-text-btn"
                             >
                                 反选
                             </button>
+                            <span class="w-px h-4 bg-zinc-200 dark:bg-zinc-700 mx-0.5"></span>
                             <button
                                 @click="handleBatchFavoriteInGallery"
                                 :disabled="selectedGalleryImageIds.length === 0"
-                                class="px-3 py-1.5 text-sm rounded-full bg-brand text-white hover:bg-brand/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                class="batch-icon-btn text-brand hover:bg-brand/10 disabled:opacity-30"
+                                title="收藏"
                             >
-                                收藏
+                                <Heart class="w-4 h-4" />
                             </button>
                             <button
                                 @click="handleBatchDeleteInGallery"
                                 :disabled="selectedGalleryImageIds.length === 0"
-                                class="px-3 py-1.5 text-sm rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                class="batch-icon-btn text-red-500 hover:bg-red-500/10 disabled:opacity-30"
+                                title="删除"
                             >
-                                删除
+                                <Trash2 class="w-4 h-4" />
                             </button>
                             <button
                                 @click="handleExitGalleryBatchMode"
-                                class="px-3 py-1.5 text-sm rounded-full border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+                                class="batch-icon-btn text-zinc-400 dark:text-zinc-500 hover:bg-zinc-500/10"
+                                title="退出"
                             >
-                                退出
+                                <X class="w-4 h-4" />
                             </button>
                         </template>
-                        <template v-else>
-                            <span class="mr-auto text-sm text-zinc-500 dark:text-zinc-400">支持多选、全选和反选操作</span>
-                            <button
-                                @click="handleEnterGalleryBatchMode"
-                                class="px-3 py-1.5 text-sm rounded-full bg-brand text-white hover:bg-brand/90 transition-colors"
-                            >
-                                批量管理
-                            </button>
-                        </template>
+                        <button
+                            v-else
+                            @click="handleEnterGalleryBatchMode"
+                            class="batch-icon-btn text-zinc-400 dark:text-zinc-500 hover:bg-zinc-500/10"
+                            title="批量管理"
+                        >
+                            <ListChecks class="w-4 h-4" />
+                        </button>
                     </div>
 
                     <GalleryGrid
@@ -157,53 +159,54 @@
                 </div>
 
                 <div v-else-if="activeTab === 'favorites'">
-                    <div class="mb-4 p-3 rounded-neo-lg border border-zinc-200 dark:border-zinc-700 bg-white/80 dark:bg-zinc-800/80 backdrop-blur-sm flex flex-wrap items-center gap-2">
+                    <div class="flex justify-end items-center gap-1 mb-3">
                         <template v-if="isFavoritesBatchMode">
-                            <span class="mr-auto text-sm text-zinc-600 dark:text-zinc-300">
-                                已选择 {{ selectedFavoriteImageIds.length }} 张
-                            </span>
+                            <span class="text-xs text-zinc-400 dark:text-zinc-500 mr-1 tabular-nums">{{ selectedFavoriteImageIds.length }} 张</span>
                             <button
                                 @click="handleSelectAllFavorites"
-                                class="px-3 py-1.5 text-sm rounded-full border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+                                class="batch-text-btn"
                             >
                                 全选
                             </button>
                             <button
                                 @click="handleInvertFavoritesSelection"
-                                class="px-3 py-1.5 text-sm rounded-full border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+                                class="batch-text-btn"
                             >
                                 反选
                             </button>
+                            <span class="w-px h-4 bg-zinc-200 dark:bg-zinc-700 mx-0.5"></span>
                             <button
                                 @click="handleBatchUnfavoriteInFavorites"
                                 :disabled="selectedFavoriteImageIds.length === 0"
-                                class="px-3 py-1.5 text-sm rounded-full bg-zinc-700 text-white hover:bg-zinc-800 dark:bg-zinc-600 dark:hover:bg-zinc-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                class="batch-icon-btn text-zinc-500 dark:text-zinc-400 hover:bg-zinc-500/10 disabled:opacity-30"
+                                title="取消收藏"
                             >
-                                取消收藏
+                                <HeartOff class="w-4 h-4" />
                             </button>
                             <button
                                 @click="handleBatchDeleteInFavorites"
                                 :disabled="selectedFavoriteImageIds.length === 0"
-                                class="px-3 py-1.5 text-sm rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                class="batch-icon-btn text-red-500 hover:bg-red-500/10 disabled:opacity-30"
+                                title="删除"
                             >
-                                删除
+                                <Trash2 class="w-4 h-4" />
                             </button>
                             <button
                                 @click="handleExitFavoritesBatchMode"
-                                class="px-3 py-1.5 text-sm rounded-full border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+                                class="batch-icon-btn text-zinc-400 dark:text-zinc-500 hover:bg-zinc-500/10"
+                                title="退出"
                             >
-                                退出
+                                <X class="w-4 h-4" />
                             </button>
                         </template>
-                        <template v-else>
-                            <span class="mr-auto text-sm text-zinc-500 dark:text-zinc-400">支持多选、全选和反选操作</span>
-                            <button
-                                @click="handleEnterFavoritesBatchMode"
-                                class="px-3 py-1.5 text-sm rounded-full bg-brand text-white hover:bg-brand/90 transition-colors"
-                            >
-                                批量管理
-                            </button>
-                        </template>
+                        <button
+                            v-else
+                            @click="handleEnterFavoritesBatchMode"
+                            class="batch-icon-btn text-zinc-400 dark:text-zinc-500 hover:bg-zinc-500/10"
+                            title="批量管理"
+                        >
+                            <ListChecks class="w-4 h-4" />
+                        </button>
                     </div>
 
                     <GalleryGrid 
@@ -347,7 +350,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, shallowRef, watch } from 'vue'
-import { Github } from 'lucide-vue-next'
+import { Github, ListChecks, Heart, HeartOff, Trash2, X } from 'lucide-vue-next'
 import Sidebar from './components/Sidebar.vue'
 import CommandCenter from './components/CommandCenter.vue'
 import SettingsTray from './components/SettingsTray.vue'
@@ -1010,6 +1013,18 @@ const handleReuse = (image: GeneratedImage) => {
     selectedStyleId.value = image.styleId || null
     activeTab.value = 'create'
     lightbox.value.isOpen = false
+    addToast('success', '已添加为参考图')
+}
+
+const handleAddReference = (url: string) => {
+    if (referenceImages.value.length >= 4) {
+        addToast('warning', '最多只能添加 4 张参考图片')
+        return
+    }
+    if (!referenceImages.value.includes(url)) {
+        referenceImages.value = [...referenceImages.value, url]
+    }
+    activeTab.value = 'create'
     addToast('success', '已添加为参考图')
 }
 

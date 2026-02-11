@@ -66,12 +66,14 @@ onUnmounted(() => {
 
 <template>
   <div v-if="isOpen" class="fixed inset-0 z-50 bg-zinc-900/95 backdrop-blur-sm flex items-center justify-center animate-fade-in">
-    <button 
-      @click="emit('close')" 
-      class="absolute top-4 right-4 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all duration-200 hover:scale-[1.03] active:scale-[0.98] min-w-[44px] min-h-[44px] flex items-center justify-center z-10 safe-area-top safe-area-right"
-    >
-      <X class="w-6 h-6" />
-    </button>
+    <div class="absolute top-4 right-4 z-10 safe-area-top safe-area-right">
+      <button 
+        @click="emit('close')" 
+        class="p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all duration-200 hover:scale-[1.03] active:scale-[0.98] min-w-[44px] min-h-[44px] flex items-center justify-center"
+      >
+        <X class="w-6 h-6" />
+      </button>
+    </div>
 
     <button
       v-if="currentIndex > 0"
