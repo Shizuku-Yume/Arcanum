@@ -3,10 +3,17 @@ import { onMounted, onUnmounted, ref, computed } from 'vue'
 import type { GeneratedImage } from '../types'
 import ImageCard from './ImageCard.vue'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   images: GeneratedImage[]
   loading: boolean
-}>()
+  selectionMode?: boolean
+  selectedIds?: number[]
+  disableLoadMore?: boolean
+}>(), {
+  selectionMode: false,
+  selectedIds: () => [],
+  disableLoadMore: false
+})
 
 const emit = defineEmits<{
   (e: 'openLightbox', images: GeneratedImage[], index: number): void
@@ -15,6 +22,7 @@ const emit = defineEmits<{
   (e: 'iterate', image: GeneratedImage): void
   (e: 'download', image: GeneratedImage): void
   (e: 'append-prompt', image: GeneratedImage): void
+  (e: 'toggleSelect', id: number): void
   (e: 'loadMore'): void
 }>()
 
@@ -25,7 +33,7 @@ const setupObserver = () => {
   if (observer) observer.disconnect()
   
   observer = new IntersectionObserver((entries) => {
-    if (entries[0].isIntersecting && !props.loading) {
+    if (entries[0].isIntersecting && !props.loading && !props.disableLoadMore) {
       emit('loadMore')
     }
   }, { rootMargin: '200px' })
@@ -78,6 +86,21 @@ const columns = computed(() => {
 const getOriginalIndex = (colIndex: number, itemIndex: number): number => {
   return itemIndex * columnCount.value + colIndex
 }
+
+const selectedIdSet = computed(() => new Set(props.selectedIds))
+
+const isSelected = (img: GeneratedImage): boolean => {
+  return typeof img.id === 'number' && selectedIdSet.value.has(img.id)
+}
+
+const handleCardClick = (img: GeneratedImage, index: number) => {
+  if (props.selectionMode && typeof img.id === 'number') {
+    emit('toggleSelect', img.id)
+    return
+  }
+
+  emit('openLightbox', props.images, index)
+}
 </script>
 
 <template>
@@ -97,8 +120,11 @@ const getOriginalIndex = (colIndex: number, itemIndex: number): number => {
           :image="img"
           status="success"
           :aspect-ratio="img.aspectRatio"
+          :selectable="selectionMode"
+          :selected="isSelected(img)"
+          :show-actions="!selectionMode"
           class="w-full"
-          @click="emit('openLightbox', images, getOriginalIndex(colIndex, itemIndex))"
+          @click="handleCardClick(img, getOriginalIndex(colIndex, itemIndex))"
           @favorite="emit('toggleFavorite', $event)"
           @delete="emit('deleteImage', $event)"
           @iterate="emit('iterate', $event)"

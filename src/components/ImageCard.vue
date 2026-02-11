@@ -9,9 +9,16 @@ interface Props {
   aspectRatio: string
   error?: string
   receivedBytes?: number
+  selectable?: boolean
+  selected?: boolean
+  showActions?: boolean
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  selectable: false,
+  selected: false,
+  showActions: true
+})
 
 const emit = defineEmits<{
   (e: 'click'): void
@@ -55,7 +62,9 @@ const hasReceivedBytes = computed(() => (props.receivedBytes ?? 0) >= receivedBy
 
 const handleFavorite = (e: Event) => {
   e.stopPropagation()
-  if (props.image) emit('favorite', props.image.id)
+  if (props.image && typeof props.image.id === 'number') {
+    emit('favorite', props.image.id)
+  }
 }
 
 const handleDownload = (e: Event) => {
@@ -65,7 +74,9 @@ const handleDownload = (e: Event) => {
 
 const handleDelete = (e: Event) => {
   e.stopPropagation()
-  if (props.image) emit('delete', props.image.id)
+  if (props.image && typeof props.image.id === 'number') {
+    emit('delete', props.image.id)
+  }
 }
 
 const handleIterate = (e: Event) => {
@@ -82,7 +93,10 @@ const handleAppendPrompt = (e: Event) => {
 <template>
   <div 
     class="relative group rounded-neo-lg overflow-hidden bg-zinc-100 dark:bg-zinc-800 shadow-neo-lift dark:shadow-none dark:border dark:border-zinc-700 hover:shadow-neo-float dark:hover:border-zinc-600 hover:scale-[1.01] active:scale-[0.98] transition-all duration-300 ease-out cursor-pointer"
-    :class="aspectRatioClass"
+    :class="[
+      aspectRatioClass,
+      selected ? 'ring-2 ring-brand ring-offset-2 ring-offset-zinc-50 dark:ring-offset-zinc-900' : ''
+    ]"
     @click="$emit('click')"
   >
     <div v-if="status === 'generating'" class="absolute inset-0 flex items-center justify-center bg-zinc-50 dark:bg-zinc-800 z-20">
@@ -114,57 +128,69 @@ const handleAppendPrompt = (e: Event) => {
         @load="onImageLoad"
       />
 
-      <div class="absolute top-0 left-0 right-0 p-2 flex justify-between items-start opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
-        <div class="flex flex-col gap-1">
-          <span class="px-2 py-1 bg-black/50 backdrop-blur rounded text-[10px] font-mono text-white">
-            {{ aspectRatio }}
-          </span>
-          <span v-if="imageSize" class="px-2 py-1 bg-black/50 backdrop-blur rounded text-[10px] font-mono text-white">
-            {{ imageSize }}
-          </span>
-        </div>
-        <button 
-          @click="handleFavorite"
-          class="p-1.5 rounded-full backdrop-blur transition-all duration-200 hover:scale-[1.05] active:scale-[0.98] min-w-[32px] min-h-[32px] flex items-center justify-center"
-          :class="image.isFavorite ? 'bg-red-500/20 text-red-500' : 'bg-black/40 text-white hover:bg-white/20'"
-        >
-          <Heart :size="16" :class="{ 'fill-current': image.isFavorite }" />
-        </button>
+      <div
+        v-if="selectable"
+        class="absolute top-2 right-2 z-20 w-6 h-6 rounded-full border-2 flex items-center justify-center backdrop-blur-sm transition-all duration-200"
+        :class="selected ? 'bg-brand border-brand text-white' : 'bg-black/35 border-white/80 text-transparent'"
+      >
+        <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5">
+          <path d="M5 10.5L8.5 14L15 7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
       </div>
 
-      <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3 pt-8 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 flex items-end justify-between">
-        <div class="flex gap-2">
+      <template v-if="showActions">
+        <div class="absolute top-0 left-0 right-0 p-2 flex justify-between items-start opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
+          <div class="flex flex-col gap-1">
+            <span class="px-2 py-1 bg-black/50 backdrop-blur rounded text-[10px] font-mono text-white">
+              {{ aspectRatio }}
+            </span>
+            <span v-if="imageSize" class="px-2 py-1 bg-black/50 backdrop-blur rounded text-[10px] font-mono text-white">
+              {{ imageSize }}
+            </span>
+          </div>
           <button 
-            @click="handleIterate"
-            class="p-2 bg-white/20 backdrop-blur rounded-full text-white transition-all duration-200 hover:bg-brand hover:scale-[1.05] active:scale-[0.98] min-w-[36px] min-h-[36px] flex items-center justify-center"
-            title="作为参考图使用"
+            @click="handleFavorite"
+            class="p-1.5 rounded-full backdrop-blur transition-all duration-200 hover:scale-[1.05] active:scale-[0.98] min-w-[32px] min-h-[32px] flex items-center justify-center"
+            :class="image.isFavorite ? 'bg-red-500/20 text-red-500' : 'bg-black/40 text-white hover:bg-white/20'"
           >
-            <RefreshCw :size="16" />
-          </button>
-          <button 
-            @click="handleAppendPrompt"
-            class="p-2 bg-white/20 backdrop-blur rounded-full text-white transition-all duration-200 hover:bg-emerald-500 hover:scale-[1.05] active:scale-[0.98] min-w-[36px] min-h-[36px] flex items-center justify-center"
-            title="追加提示词"
-          >
-            <Copy :size="16" />
-          </button>
-          <button 
-            @click="handleDownload"
-            class="p-2 bg-white/20 backdrop-blur rounded-full text-white transition-all duration-200 hover:bg-emerald-500 hover:scale-[1.05] active:scale-[0.98] min-w-[36px] min-h-[36px] flex items-center justify-center"
-            title="下载"
-          >
-            <Download :size="16" />
+            <Heart :size="16" :class="{ 'fill-current': image.isFavorite }" />
           </button>
         </div>
-        
-        <button 
-          @click="handleDelete"
-          class="p-2 bg-white/20 backdrop-blur rounded-full text-white transition-all duration-200 hover:bg-red-500 hover:scale-[1.05] active:scale-[0.98] min-w-[36px] min-h-[36px] flex items-center justify-center"
-          title="删除"
-        >
-          <Trash2 :size="16" />
-        </button>
-      </div>
+
+        <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3 pt-8 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 flex items-end justify-between">
+          <div class="flex gap-2">
+            <button 
+              @click="handleIterate"
+              class="p-2 bg-white/20 backdrop-blur rounded-full text-white transition-all duration-200 hover:bg-brand hover:scale-[1.05] active:scale-[0.98] min-w-[36px] min-h-[36px] flex items-center justify-center"
+              title="作为参考图使用"
+            >
+              <RefreshCw :size="16" />
+            </button>
+            <button 
+              @click="handleAppendPrompt"
+              class="p-2 bg-white/20 backdrop-blur rounded-full text-white transition-all duration-200 hover:bg-emerald-500 hover:scale-[1.05] active:scale-[0.98] min-w-[36px] min-h-[36px] flex items-center justify-center"
+              title="追加提示词"
+            >
+              <Copy :size="16" />
+            </button>
+            <button 
+              @click="handleDownload"
+              class="p-2 bg-white/20 backdrop-blur rounded-full text-white transition-all duration-200 hover:bg-emerald-500 hover:scale-[1.05] active:scale-[0.98] min-w-[36px] min-h-[36px] flex items-center justify-center"
+              title="下载"
+            >
+              <Download :size="16" />
+            </button>
+          </div>
+          
+          <button 
+            @click="handleDelete"
+            class="p-2 bg-white/20 backdrop-blur rounded-full text-white transition-all duration-200 hover:bg-red-500 hover:scale-[1.05] active:scale-[0.98] min-w-[36px] min-h-[36px] flex items-center justify-center"
+            title="删除"
+          >
+            <Trash2 :size="16" />
+          </button>
+        </div>
+      </template>
     </div>
   </div>
 </template>

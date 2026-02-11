@@ -19,11 +19,23 @@ export const db = new ArcanumDB()
 
 export const imageStorage = {
     async addImage(image: Omit<GeneratedImage, 'id'>): Promise<number> {
-        return await db.images.add(image as GeneratedImage)
+        const key = await db.images.add(image as GeneratedImage)
+        if (typeof key !== 'number') {
+            throw new Error('Failed to create image key')
+        }
+        return key
     },
 
     async addBatch(images: Omit<GeneratedImage, 'id'>[]): Promise<number[]> {
-        return await db.images.bulkAdd(images as GeneratedImage[], { allKeys: true })
+        const keys = await db.images.bulkAdd(images as GeneratedImage[], { allKeys: true })
+        const numericKeys: number[] = []
+        for (const key of keys) {
+            if (typeof key !== 'number') {
+                throw new Error('Failed to create image keys')
+            }
+            numericKeys.push(key)
+        }
+        return numericKeys
     },
 
     async getRecent(limit: number = 50, offset: number = 0): Promise<GeneratedImage[]> {
@@ -60,8 +72,22 @@ export const imageStorage = {
         return newStatus
     },
 
+    async setFavorite(id: number, isFavorite: boolean): Promise<void> {
+        await db.images.update(id, { isFavorite })
+    },
+
+    async setFavoriteBatch(ids: number[], isFavorite: boolean): Promise<void> {
+        if (ids.length === 0) return
+        await db.images.where('id').anyOf(ids).modify({ isFavorite })
+    },
+
     async deleteImage(id: number): Promise<void> {
         await db.images.delete(id)
+    },
+
+    async deleteImages(ids: number[]): Promise<void> {
+        if (ids.length === 0) return
+        await db.images.bulkDelete(ids)
     },
 
     async deleteBatch(batchId: string): Promise<void> {
@@ -93,10 +119,14 @@ export const imageStorage = {
 
 export const presetStorage = {
     async addPreset(preset: Omit<StylePreset, 'id'>): Promise<number> {
-        return await db.stylePresets.add({
+        const key = await db.stylePresets.add({
             ...preset,
             createdAt: Date.now()
         } as StylePreset)
+        if (typeof key !== 'number') {
+            throw new Error('Failed to create preset key')
+        }
+        return key
     },
 
     async getAll(): Promise<StylePreset[]> {

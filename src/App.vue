@@ -78,42 +78,148 @@
                 </div>
 
                 <div v-else-if="activeTab === 'gallery'">
-                <GalleryGrid
-                    :images="galleryImages"
-                    :loading="isLoadingGallery"
-                    @open-lightbox="openLightbox"
-                    @toggle-favorite="handleToggleFavorite"
-                    @delete-image="handleDeleteImage"
-                    @iterate="handleReuse"
-                    @download="handleDownload"
-                    @append-prompt="handleAppendPrompt"
-                    @load-more="loadMoreGallery"
-                />
-
-                <div v-if="galleryImages.length === 0 && !isLoadingGallery" class="empty-state-simple animate-fade-in">
-                    <div class="empty-state-icon">
-                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/>
-                            <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/>
-                            <path d="M3 16l5-5 4 4 6-6 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
+                    <div class="mb-4 p-3 rounded-neo-lg border border-zinc-200 dark:border-zinc-700 bg-white/80 dark:bg-zinc-800/80 backdrop-blur-sm flex flex-wrap items-center gap-2">
+                        <template v-if="isGalleryBatchMode">
+                            <span class="mr-auto text-sm text-zinc-600 dark:text-zinc-300">
+                                已选择 {{ selectedGalleryImageIds.length }} 张
+                            </span>
+                            <button
+                                @click="handleSelectAllGallery"
+                                class="px-3 py-1.5 text-sm rounded-full border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+                            >
+                                全选
+                            </button>
+                            <button
+                                @click="handleInvertGallerySelection"
+                                class="px-3 py-1.5 text-sm rounded-full border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+                            >
+                                反选
+                            </button>
+                            <button
+                                @click="handleBatchFavoriteInGallery"
+                                :disabled="selectedGalleryImageIds.length === 0"
+                                class="px-3 py-1.5 text-sm rounded-full bg-brand text-white hover:bg-brand/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                收藏
+                            </button>
+                            <button
+                                @click="handleBatchDeleteInGallery"
+                                :disabled="selectedGalleryImageIds.length === 0"
+                                class="px-3 py-1.5 text-sm rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                删除
+                            </button>
+                            <button
+                                @click="handleExitGalleryBatchMode"
+                                class="px-3 py-1.5 text-sm rounded-full border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+                            >
+                                退出
+                            </button>
+                        </template>
+                        <template v-else>
+                            <span class="mr-auto text-sm text-zinc-500 dark:text-zinc-400">支持多选、全选和反选操作</span>
+                            <button
+                                @click="handleEnterGalleryBatchMode"
+                                class="px-3 py-1.5 text-sm rounded-full bg-brand text-white hover:bg-brand/90 transition-colors"
+                            >
+                                批量管理
+                            </button>
+                        </template>
                     </div>
-                    <h3 class="empty-state-heading">暂无图片</h3>
-                    <p class="empty-state-desc">在创作页面生成图片后，它们会出现在这里</p>
-                </div>
+
+                    <GalleryGrid
+                        :images="galleryImages"
+                        :loading="isLoadingGallery"
+                        :selection-mode="isGalleryBatchMode"
+                        :selected-ids="selectedGalleryImageIds"
+                        :disable-load-more="isGalleryBatchMode"
+                        @open-lightbox="openLightbox"
+                        @toggle-favorite="handleToggleFavorite"
+                        @delete-image="handleDeleteImage"
+                        @iterate="handleReuse"
+                        @download="handleDownload"
+                        @append-prompt="handleAppendPrompt"
+                        @toggle-select="handleToggleGallerySelection"
+                        @load-more="loadMoreGallery"
+                    />
+
+                    <div v-if="galleryImages.length === 0 && !isLoadingGallery" class="empty-state-simple animate-fade-in">
+                        <div class="empty-state-icon">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                                <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/>
+                                <path d="M3 16l5-5 4 4 6-6 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <h3 class="empty-state-heading">暂无图片</h3>
+                        <p class="empty-state-desc">在创作页面生成图片后，它们会出现在这里</p>
+                    </div>
                 </div>
 
                 <div v-else-if="activeTab === 'favorites'">
-                <GalleryGrid 
-                    :images="favoriteImages"
-                    :loading="isLoadingFavorites"
-                    @open-lightbox="openLightbox"
-                    @toggle-favorite="handleToggleFavorite"
-                    @delete-image="handleDeleteImage"
-                    @iterate="handleReuse"
-                    @download="handleDownload"
-                    @append-prompt="handleAppendPrompt"
-                />
+                    <div class="mb-4 p-3 rounded-neo-lg border border-zinc-200 dark:border-zinc-700 bg-white/80 dark:bg-zinc-800/80 backdrop-blur-sm flex flex-wrap items-center gap-2">
+                        <template v-if="isFavoritesBatchMode">
+                            <span class="mr-auto text-sm text-zinc-600 dark:text-zinc-300">
+                                已选择 {{ selectedFavoriteImageIds.length }} 张
+                            </span>
+                            <button
+                                @click="handleSelectAllFavorites"
+                                class="px-3 py-1.5 text-sm rounded-full border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+                            >
+                                全选
+                            </button>
+                            <button
+                                @click="handleInvertFavoritesSelection"
+                                class="px-3 py-1.5 text-sm rounded-full border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+                            >
+                                反选
+                            </button>
+                            <button
+                                @click="handleBatchUnfavoriteInFavorites"
+                                :disabled="selectedFavoriteImageIds.length === 0"
+                                class="px-3 py-1.5 text-sm rounded-full bg-zinc-700 text-white hover:bg-zinc-800 dark:bg-zinc-600 dark:hover:bg-zinc-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                取消收藏
+                            </button>
+                            <button
+                                @click="handleBatchDeleteInFavorites"
+                                :disabled="selectedFavoriteImageIds.length === 0"
+                                class="px-3 py-1.5 text-sm rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                删除
+                            </button>
+                            <button
+                                @click="handleExitFavoritesBatchMode"
+                                class="px-3 py-1.5 text-sm rounded-full border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+                            >
+                                退出
+                            </button>
+                        </template>
+                        <template v-else>
+                            <span class="mr-auto text-sm text-zinc-500 dark:text-zinc-400">支持多选、全选和反选操作</span>
+                            <button
+                                @click="handleEnterFavoritesBatchMode"
+                                class="px-3 py-1.5 text-sm rounded-full bg-brand text-white hover:bg-brand/90 transition-colors"
+                            >
+                                批量管理
+                            </button>
+                        </template>
+                    </div>
+
+                    <GalleryGrid 
+                        :images="favoriteImages"
+                        :loading="isLoadingFavorites"
+                        :selection-mode="isFavoritesBatchMode"
+                        :selected-ids="selectedFavoriteImageIds"
+                        :disable-load-more="isFavoritesBatchMode"
+                        @open-lightbox="openLightbox"
+                        @toggle-favorite="handleToggleFavorite"
+                        @delete-image="handleDeleteImage"
+                        @iterate="handleReuse"
+                        @download="handleDownload"
+                        @append-prompt="handleAppendPrompt"
+                        @toggle-select="handleToggleFavoriteSelection"
+                    />
                     
                     <div v-if="favoriteImages.length === 0 && !isLoadingFavorites" class="empty-state-simple animate-fade-in">
                         <div class="empty-state-icon">
@@ -370,6 +476,10 @@ const galleryImages = shallowRef<GeneratedImage[]>([])
 const favoriteImages = shallowRef<GeneratedImage[]>([])
 const isLoadingGallery = ref(false)
 const isLoadingFavorites = ref(false)
+const isGalleryBatchMode = ref(false)
+const isFavoritesBatchMode = ref(false)
+const selectedGalleryImageIds = ref<number[]>([])
+const selectedFavoriteImageIds = ref<number[]>([])
 
 const lightbox = ref<LightboxState>({
     isOpen: false,
@@ -683,16 +793,173 @@ const loadFavorites = async () => {
     }
 }
 
+const getImageIds = (images: GeneratedImage[]): number[] => {
+    return images
+        .map(image => image.id)
+        .filter((id): id is number => typeof id === 'number')
+}
+
+const toggleSelectionId = (currentIds: number[], id: number): number[] => {
+    const selected = new Set(currentIds)
+    if (selected.has(id)) {
+        selected.delete(id)
+    } else {
+        selected.add(id)
+    }
+    return Array.from(selected)
+}
+
+const refreshImageCollections = async () => {
+    await Promise.all([loadGallery(), loadFavorites()])
+}
+
+const handleEnterGalleryBatchMode = () => {
+    isGalleryBatchMode.value = true
+    selectedGalleryImageIds.value = []
+}
+
+const handleExitGalleryBatchMode = () => {
+    isGalleryBatchMode.value = false
+    selectedGalleryImageIds.value = []
+}
+
+const handleToggleGallerySelection = (id: number) => {
+    selectedGalleryImageIds.value = toggleSelectionId(selectedGalleryImageIds.value, id)
+}
+
+const handleSelectAllGallery = () => {
+    selectedGalleryImageIds.value = getImageIds(galleryImages.value)
+}
+
+const handleInvertGallerySelection = () => {
+    const selected = new Set(selectedGalleryImageIds.value)
+    selectedGalleryImageIds.value = getImageIds(galleryImages.value).filter(id => !selected.has(id))
+}
+
+const handleBatchFavoriteInGallery = async () => {
+    if (selectedGalleryImageIds.value.length === 0) return
+
+    const selected = new Set(selectedGalleryImageIds.value)
+    const idsToFavorite = galleryImages.value.reduce<number[]>((ids, image) => {
+        if (typeof image.id === 'number' && selected.has(image.id) && !image.isFavorite) {
+            ids.push(image.id)
+        }
+        return ids
+    }, [])
+
+    if (idsToFavorite.length === 0) {
+        addToast('warning', '选中的图片已全部收藏')
+        return
+    }
+
+    await imageStorage.setFavoriteBatch(idsToFavorite, true)
+    selectedGalleryImageIds.value = []
+    addToast('success', `已收藏 ${idsToFavorite.length} 张图片`)
+    await refreshImageCollections()
+}
+
+const handleBatchDeleteInGallery = async () => {
+    const ids = [...selectedGalleryImageIds.value]
+    if (ids.length === 0) return
+
+    const confirmed = await showConfirm({
+        title: '批量删除',
+        message: `确定删除选中的 ${ids.length} 张图片吗？`,
+        type: 'warning',
+        confirmText: '删除',
+        cancelText: '取消'
+    })
+
+    if (!confirmed) return
+
+    await imageStorage.deleteImages(ids)
+    selectedGalleryImageIds.value = []
+    addToast('success', `已删除 ${ids.length} 张图片`)
+    await refreshImageCollections()
+}
+
+const handleEnterFavoritesBatchMode = () => {
+    isFavoritesBatchMode.value = true
+    selectedFavoriteImageIds.value = []
+}
+
+const handleExitFavoritesBatchMode = () => {
+    isFavoritesBatchMode.value = false
+    selectedFavoriteImageIds.value = []
+}
+
+const handleToggleFavoriteSelection = (id: number) => {
+    selectedFavoriteImageIds.value = toggleSelectionId(selectedFavoriteImageIds.value, id)
+}
+
+const handleSelectAllFavorites = () => {
+    selectedFavoriteImageIds.value = getImageIds(favoriteImages.value)
+}
+
+const handleInvertFavoritesSelection = () => {
+    const selected = new Set(selectedFavoriteImageIds.value)
+    selectedFavoriteImageIds.value = getImageIds(favoriteImages.value).filter(id => !selected.has(id))
+}
+
+const handleBatchUnfavoriteInFavorites = async () => {
+    const ids = [...selectedFavoriteImageIds.value]
+    if (ids.length === 0) return
+
+    await imageStorage.setFavoriteBatch(ids, false)
+    selectedFavoriteImageIds.value = []
+    addToast('success', `已取消收藏 ${ids.length} 张图片`)
+    await refreshImageCollections()
+}
+
+const handleBatchDeleteInFavorites = async () => {
+    const ids = [...selectedFavoriteImageIds.value]
+    if (ids.length === 0) return
+
+    const confirmed = await showConfirm({
+        title: '批量删除',
+        message: `确定删除选中的 ${ids.length} 张图片吗？`,
+        type: 'warning',
+        confirmText: '删除',
+        cancelText: '取消'
+    })
+
+    if (!confirmed) return
+
+    await imageStorage.deleteImages(ids)
+    selectedFavoriteImageIds.value = []
+    addToast('success', `已删除 ${ids.length} 张图片`)
+    await refreshImageCollections()
+}
+
+watch(galleryImages, (images) => {
+    const validIds = new Set(getImageIds(images))
+    selectedGalleryImageIds.value = selectedGalleryImageIds.value.filter(id => validIds.has(id))
+})
+
+watch(favoriteImages, (images) => {
+    const validIds = new Set(getImageIds(images))
+    selectedFavoriteImageIds.value = selectedFavoriteImageIds.value.filter(id => validIds.has(id))
+})
+
+watch(activeTab, (tab) => {
+    if (tab !== 'gallery') {
+        handleExitGalleryBatchMode()
+    }
+    if (tab !== 'favorites') {
+        handleExitFavoritesBatchMode()
+    }
+})
+
 const handleToggleFavorite = async (id: number) => {
     await imageStorage.toggleFavorite(id)
-    await loadGallery()
-    await loadFavorites()
+    await refreshImageCollections()
 }
 
 const handleDeleteImage = async (id: number) => {
     await imageStorage.deleteImage(id)
-    await loadGallery()
-    await loadFavorites()
+    selectedGalleryImageIds.value = selectedGalleryImageIds.value.filter(selectedId => selectedId !== id)
+    selectedFavoriteImageIds.value = selectedFavoriteImageIds.value.filter(selectedId => selectedId !== id)
+    await refreshImageCollections()
 }
 
 const openLightbox = (images: GeneratedImage[], index: number) => {
