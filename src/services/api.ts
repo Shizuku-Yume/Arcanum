@@ -1,7 +1,10 @@
 import type { ApiModel, GenerateRequest, GenerateResponse, ModelListResponse } from '../types'
 import { DEFAULT_API_ENDPOINT, DEFAULT_MODEL_ID } from '../config/api'
+import { isOpenAIImagesModel, mapAspectRatioToOpenAIImageSize, mapResolutionToOpenAIImageQuality } from '../utils/imageModel'
 
 type ProgressCallback = (receivedBytes: number) => void
+
+type ImageOperation = 'generations' | 'edits'
 
 function shouldRetryWithoutStream(status: number, errorText: string): boolean {
     if (status !== 400) return false
@@ -10,6 +13,157 @@ function shouldRetryWithoutStream(status: number, errorText: string): boolean {
         message.includes('stream is not supported for image generation')
         || (message.includes('stream') && message.includes('not supported') && message.includes('image'))
     )
+}
+
+function guessMimeTypeFromUrl(url: string): string {
+    const normalized = url.toLowerCase()
+    if (normalized.includes('.webp')) return 'image/webp'
+    if (normalized.includes('.jpg') || normalized.includes('.jpeg')) return 'image/jpeg'
+    if (normalized.includes('.png')) return 'image/png'
+    if (normalized.includes('.gif')) return 'image/gif'
+    return 'application/octet-stream'
+}
+
+function mimeTypeToExtension(mimeType: string): string {
+    switch (mimeType) {
+        case 'image/jpeg':
+            return 'jpg'
+        case 'image/png':
+            return 'png'
+        case 'image/webp':
+            return 'webp'
+        case 'image/gif':
+            return 'gif'
+        default:
+            return 'bin'
+    }
+}
+
+function dataUrlToBlob(dataUrl: string): Blob {
+    const match = dataUrl.match(/^data:([^;,]+)?(;base64)?,(.*)$/)
+    if (!match) {
+        throw new Error('不支持的 Data URL 格式')
+    }
+
+    const mimeType = match[1] || 'application/octet-stream'
+    const isBase64 = Boolean(match[2])
+    const data = match[3] || ''
+
+    if (isBase64) {
+        const binary = atob(data)
+        const bytes = Uint8Array.from(binary, char => char.charCodeAt(0))
+        return new Blob([bytes], { type: mimeType })
+    }
+
+    return new Blob([decodeURIComponent(data)], { type: mimeType })
+}
+
+async function imageSourceToFile(imageSource: string, index: number): Promise<File> {
+    let blob: Blob
+    let mimeType = 'application/octet-stream'
+
+    if (imageSource.startsWith('data:')) {
+        blob = dataUrlToBlob(imageSource)
+        mimeType = blob.type || mimeType
+    } else {
+        const response = await fetch(imageSource)
+        if (!response.ok) {
+            throw new Error(`无法读取参考图片 ${response.status}: ${await response.text()}`)
+        }
+        blob = await response.blob()
+        mimeType = blob.type || guessMimeTypeFromUrl(imageSource)
+    }
+
+    const extension = mimeTypeToExtension(mimeType)
+    return new File([blob], `reference-${index + 1}.${extension}`, { type: mimeType })
+}
+
+function parseImageApiResponse(data: any, outputFormat: string): GenerateResponse {
+    const imageUrls: string[] = []
+    const mimeType = `image/${outputFormat}`
+
+    if (Array.isArray(data?.data)) {
+        for (const item of data.data) {
+            if (item?.b64_json) {
+                imageUrls.push(`data:${mimeType};base64,${item.b64_json}`)
+            } else if (item?.url) {
+                imageUrls.push(item.url)
+            }
+        }
+    }
+
+    if (imageUrls.length > 0) {
+        console.log(`成功生成 ${imageUrls.length} 张图片`)
+        return { imageUrls }
+    }
+
+    throw new Error('图片接口未返回有效图片数据')
+}
+
+async function parseJsonResponseWithProgress(response: Response, onProgress?: ProgressCallback): Promise<any> {
+    if (onProgress) {
+        trackResponseBytes(response.clone(), onProgress).catch(error => {
+            console.warn('Response progress tracking failed:', error)
+        })
+    }
+
+    return response.json()
+}
+
+async function generateImageViaOpenAIImages(request: GenerateRequest, onProgress?: ProgressCallback): Promise<GenerateResponse> {
+    const modelId = request.model?.trim() || DEFAULT_MODEL_ID
+    const operation: ImageOperation = request.images.length > 0 ? 'edits' : 'generations'
+    const apiEndpoint = resolveImagesEndpoint(request.endpoint?.trim() || DEFAULT_API_ENDPOINT, operation)
+    const size = mapAspectRatioToOpenAIImageSize(request.aspectRatio)
+    const quality = mapResolutionToOpenAIImageQuality(request.imageSize)
+    const outputFormat = 'png'
+
+    let response: Response
+
+    if (operation === 'generations') {
+        response = await fetch(apiEndpoint, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${request.apikey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: modelId,
+                prompt: request.prompt,
+                size,
+                quality,
+                output_format: outputFormat
+            })
+        })
+    } else {
+        const formData = new FormData()
+        formData.append('model', modelId)
+        formData.append('prompt', request.prompt)
+        formData.append('size', size)
+        formData.append('quality', quality)
+        formData.append('output_format', outputFormat)
+
+        const files = await Promise.all(request.images.map((image, index) => imageSourceToFile(image, index)))
+        files.forEach(file => {
+            formData.append('image[]', file, file.name)
+        })
+
+        response = await fetch(apiEndpoint, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${request.apikey}`
+            },
+            body: formData
+        })
+    }
+
+    if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`API error ${response.status}: ${errorText}`)
+    }
+
+    const data = await parseJsonResponseWithProgress(response, onProgress)
+    return parseImageApiResponse(data, outputFormat)
 }
 
 /**
@@ -123,8 +277,13 @@ async function trackResponseBytes(response: Response, onProgress?: ProgressCallb
 }
 
 export async function generateImage(request: GenerateRequest, onProgress?: ProgressCallback): Promise<GenerateResponse> {
-    const apiEndpoint = resolveChatEndpoint(request.endpoint?.trim() || DEFAULT_API_ENDPOINT)
     const modelId = request.model?.trim() || DEFAULT_MODEL_ID
+
+    if (isOpenAIImagesModel(modelId)) {
+        return generateImageViaOpenAIImages(request, onProgress)
+    }
+
+    const apiEndpoint = resolveChatEndpoint(request.endpoint?.trim() || DEFAULT_API_ENDPOINT)
 
     // 检查是否是 Gemini 3 Pro Image 模型
     const isGemini3ProImage = modelId.toLowerCase().includes('gemini-3-pro-image')
@@ -236,14 +395,7 @@ export async function generateImage(request: GenerateRequest, onProgress?: Progr
             throw new Error('流式响应解析失败')
         }
     } else {
-        if (onProgress) {
-            trackResponseBytes(response.clone(), onProgress).catch(error => {
-                console.warn('Response progress tracking failed:', error)
-            })
-        }
-        // 非流式响应
-        console.log('使用非流式模式解析响应')
-        data = await response.json()
+        data = await parseJsonResponseWithProgress(response, onProgress)
     }
 
     // 统一使用标准 OpenAI 格式响应处理
@@ -368,6 +520,12 @@ function resolveModelsEndpoint(endpoint: string): string {
             } else {
                 segments.push('models')
             }
+        } else if (lastSegment === 'generations' || lastSegment === 'edits') {
+            segments.pop()
+            if (segments[segments.length - 1] === 'images') {
+                segments.pop()
+            }
+            segments.push('models')
         } else if (lastSegment === 'v1' || lastSegment === 'api') {
             segments.push('models')
         } else {
@@ -400,6 +558,12 @@ function resolveChatEndpoint(endpoint: string): string {
 
         if (lastSegment === 'chat') {
             segments.push('completions')
+        } else if (lastSegment === 'generations' || lastSegment === 'edits') {
+            segments.pop()
+            if (segments[segments.length - 1] === 'images') {
+                segments.pop()
+            }
+            segments.push('chat', 'completions')
         } else if (lastSegment === 'v1' || lastSegment === 'api') {
             segments.push('chat', 'completions')
         } else if (lastSegment === 'models') {
@@ -414,5 +578,46 @@ function resolveChatEndpoint(endpoint: string): string {
     } catch (error) {
         console.warn('无法解析聊天端点，将使用默认规则:', error)
         return endpoint.replace(/\/$/, '') + '/v1/chat/completions'
+    }
+}
+
+function resolveImagesEndpoint(endpoint: string, operation: ImageOperation): string {
+    try {
+        const url = new URL(endpoint)
+        const segments = url.pathname.split('/').filter(Boolean)
+
+        if (segments.length === 0) {
+            url.pathname = `/v1/images/${operation}`
+            return url.toString()
+        }
+
+        const lastSegment = segments[segments.length - 1]
+        const secondLast = segments[segments.length - 2]
+
+        if ((lastSegment === 'generations' || lastSegment === 'edits') && secondLast === 'images') {
+            segments[segments.length - 1] = operation
+        } else if (lastSegment === 'completions') {
+            segments.pop()
+            if (segments[segments.length - 1] === 'chat') {
+                segments.pop()
+            }
+            segments.push('images', operation)
+        } else if (lastSegment === 'chat') {
+            segments.pop()
+            segments.push('images', operation)
+        } else if (lastSegment === 'models') {
+            segments.pop()
+            segments.push('images', operation)
+        } else if (lastSegment === 'v1' || lastSegment === 'api') {
+            segments.push('images', operation)
+        } else {
+            segments.push('images', operation)
+        }
+
+        url.pathname = '/' + segments.join('/')
+        return url.toString()
+    } catch (error) {
+        console.warn('无法解析图片端点，将使用默认规则:', error)
+        return endpoint.replace(/\/$/, '') + `/v1/images/${operation}`
     }
 }

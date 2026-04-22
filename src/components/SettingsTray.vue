@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { Link2 } from 'lucide-vue-next'
+import { getResolutionLabel, getSizeInfo } from '../utils/imageModel'
 
 const props = defineProps<{
   aspectRatios: string[]
   resolution: string
   count: number
+  useOpenAIImagesModel?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -14,11 +16,13 @@ const emit = defineEmits<{
   (e: 'update:count', value: number): void
 }>()
 
-const availableRatios = [
+const defaultRatios = [
   '21:9', '16:9', '3:2', '4:3', '1:1',
   '3:4', '2:3', '9:16', '4:5', '5:4'
 ]
 
+const openAIImageRatios = ['16:9', '1:1', '9:16']
+const availableRatios = computed(() => props.useOpenAIImagesModel ? openAIImageRatios : defaultRatios)
 const resolutions = ['1K', '2K', '4K']
 
 const toggleRatio = (ratio: string) => {
@@ -62,46 +66,23 @@ const getRatioStyle = (ratio: string) => {
   return { width: `${width}px`, height: `${height}px` }
 }
 
-const resolutionLabels: Record<string, string> = {
-  '1K': '标准 (1K)',
-  '2K': '高 (2K)',
-  '4K': '超清 (4K)'
-}
-
 const sizeInfo = computed(() => {
-  const baseMap: Record<string, number> = {
-    '1K': 1024,
-    '2K': 2048,
-    '4K': 4096
-  }
-  const ratio = props.aspectRatios[0] || '1:1'
-  const [w, h] = ratio.split(':').map(Number)
-  const base = baseMap[props.resolution] ?? 1024
-  if (!w || !h) return { width: base, height: base }
-
-  let width = base
-  let height = base
-  if (w >= h) {
-    width = base
-    height = base * (h / w)
-  } else {
-    height = base
-    width = base * (w / h)
-  }
-
-  const roundTo = (value: number) => Math.round(value / 8) * 8
-  return {
-    width: roundTo(width),
-    height: roundTo(height)
-  }
+  return getSizeInfo(props.aspectRatios[0] || '1:1', props.resolution, props.useOpenAIImagesModel)
 })
+
+const resolutionTitle = computed(() => props.useOpenAIImagesModel ? '质量' : '分辨率')
+const resolutionHint = computed(() => props.useOpenAIImagesModel ? 'OpenAI Images 将按质量档位生成' : '')
+const sizeHint = computed(() => props.useOpenAIImagesModel ? 'gpt-image 当前使用 OpenAI 支持的固定输出尺寸' : '')
 </script>
 
 <template>
   <div class="space-y-5 text-[11px]">
     <div class="space-y-2">
-      <label class="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">宽高比</label>
-      <div class="grid grid-cols-5 sm:grid-cols-10 gap-2">
+      <div class="flex items-center justify-between gap-3">
+        <label class="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">宽高比</label>
+        <span v-if="useOpenAIImagesModel" class="text-[10px] text-zinc-400 dark:text-zinc-500">仅展示 gpt-image 可直接映射的比例</span>
+      </div>
+      <div class="grid grid-cols-3 sm:grid-cols-3 gap-2" :class="useOpenAIImagesModel ? '' : 'sm:grid-cols-10 grid-cols-5'">
         <button
           v-for="ratio in availableRatios"
           :key="ratio"
@@ -121,7 +102,10 @@ const sizeInfo = computed(() => {
     </div>
 
     <div class="space-y-2">
-      <label class="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">分辨率</label>
+      <div class="flex items-center justify-between gap-3">
+        <label class="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">{{ resolutionTitle }}</label>
+        <span v-if="resolutionHint" class="text-[10px] text-zinc-400 dark:text-zinc-500">{{ resolutionHint }}</span>
+      </div>
       <div class="flex gap-2">
         <button
           v-for="res in resolutions"
@@ -132,13 +116,16 @@ const sizeInfo = computed(() => {
             ? 'bg-white dark:bg-zinc-700 border-zinc-200 dark:border-zinc-600 text-zinc-800 dark:text-zinc-100'
             : 'bg-zinc-50 dark:bg-zinc-800 border-zinc-200/60 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'"
         >
-          {{ resolutionLabels[res] || res }}
+          {{ getResolutionLabel(res, useOpenAIImagesModel) }}
         </button>
       </div>
     </div>
 
     <div class="space-y-2">
-      <label class="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">尺寸</label>
+      <div class="flex items-center justify-between gap-3">
+        <label class="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">尺寸</label>
+        <span v-if="sizeHint" class="text-[10px] text-zinc-400 dark:text-zinc-500">{{ sizeHint }}</span>
+      </div>
       <div class="flex items-center gap-3 text-sm text-zinc-600 dark:text-zinc-300">
         <span class="text-[10px] text-zinc-400">W</span>
         <span class="font-semibold">{{ sizeInfo.width }}</span>

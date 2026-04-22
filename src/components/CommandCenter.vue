@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { ArrowUp, Maximize2, Minimize2 } from 'lucide-vue-next';
+import { getResolutionLabel } from '../utils/imageModel'
 
 const props = defineProps<{
   prompt: string;
@@ -9,6 +10,7 @@ const props = defineProps<{
   aspectRatios: string[];
   resolution: string;
   count: number;
+  useOpenAIImagesModel?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -46,6 +48,8 @@ const getRatioBadgeStyle = (ratio: string) => {
   }
   return { width: `${width}px`, height: `${height}px` };
 };
+
+const resolutionDisplayLabel = computed(() => getResolutionLabel(props.resolution, props.useOpenAIImagesModel));
 
 // 计算总生成数量
 const totalGenerations = computed(() => {
@@ -140,7 +144,7 @@ const totalGenerations = computed(() => {
                         ? 'bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200'
                         : 'hover:bg-zinc-100 dark:hover:bg-zinc-700'"
                     >
-                      {{ resolution }}
+                      {{ resolutionDisplayLabel }}
                     </button>
                     <div class="w-px h-3 bg-zinc-300/80 dark:bg-zinc-600/80 hidden sm:block"></div>
                     <button

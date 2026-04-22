@@ -246,6 +246,7 @@
             :aspect-ratios="params.aspectRatios"
             :resolution="params.resolution"
             :count="params.count"
+            :use-open-a-i-images-model="useOpenAIImagesModel"
             @update:prompt="prompt = $event"
             @update:show-settings="showSettings = $event"
             @generate="handleGenerate"
@@ -255,6 +256,7 @@
                     v-model:aspect-ratios="params.aspectRatios"
                     v-model:resolution="params.resolution"
                     v-model:count="params.count"
+                    :use-open-a-i-images-model="useOpenAIImagesModel"
                 />
             </template>
             
@@ -383,7 +385,7 @@ import type {
     AspectRatio,
     Resolution
 } from './types'
-import { DEFAULT_API_ENDPOINT, DEFAULT_MODEL_ID } from './config/api'
+import { isOpenAIImagesModel, normalizeAspectRatioForOpenAI } from './utils/imageModel'
 
 const activeTab = ref<TabType>('create')
 const showSettings = ref(false)
@@ -435,6 +437,8 @@ const activeProvider = computed(() =>
     { apiKey: '', endpoint: '', model: '', id: '', name: '' }
 )
 
+const useOpenAIImagesModel = computed(() => isOpenAIImagesModel(activeProvider.value.model || ''))
+
 const apiKey = computed({
     get: () => activeProvider.value.apiKey,
     set: (val) => updateActiveProvider({ apiKey: val })
@@ -462,6 +466,16 @@ watch(params, (newParams) => {
 
 watch(enableGoogleSearch, (newValue) => {
     LocalStorage.saveGoogleSearchEnabled(newValue)
+})
+
+watch(useOpenAIImagesModel, (enabled) => {
+    if (!enabled) return
+
+    const normalized = Array.from(new Set((params.value.aspectRatios?.length ? params.value.aspectRatios : ['1:1']).map(ratio => normalizeAspectRatioForOpenAI(ratio)))) as AspectRatio[]
+    params.value = {
+        ...params.value,
+        aspectRatios: normalized.length > 0 ? normalized : ['1:1'] as AspectRatio[]
+    }
 })
 
 // 打开API配置弹窗时自动获取模型列表
