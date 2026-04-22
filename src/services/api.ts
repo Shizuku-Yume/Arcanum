@@ -3,6 +3,15 @@ import { DEFAULT_API_ENDPOINT, DEFAULT_MODEL_ID } from '../config/api'
 
 type ProgressCallback = (receivedBytes: number) => void
 
+function shouldRetryWithoutStream(status: number, errorText: string): boolean {
+    if (status !== 400) return false
+    const message = String(errorText || '').toLowerCase()
+    return (
+        message.includes('stream is not supported for image generation')
+        || (message.includes('stream') && message.includes('not supported') && message.includes('image'))
+    )
+}
+
 /**
  * Parse Server-Sent Events (SSE) streaming response
  */
@@ -171,7 +180,7 @@ export async function generateImage(request: GenerateRequest, onProgress?: Progr
         payload.image_config = imageConfig
     }
 
-    // 启用流式模式
+    // 默认优先使用流式模式；若上游图像接口不支持，再自动回退到非流式
     payload.stream = true
 
     let data: any
@@ -193,6 +202,19 @@ export async function generateImage(request: GenerateRequest, onProgress?: Progr
         if (errorText.includes('output modalities')) {
             const altModalities = isMultimodalModel ? ['image'] : ['image', 'text']
             payload.modalities = altModalities
+            fetchOptions.body = JSON.stringify(payload)
+            response = await fetch(apiEndpoint, fetchOptions)
+        } else {
+            throw new Error(`API error ${response.status}: ${errorText}`)
+        }
+    }
+
+    if (!response.ok) {
+        const errorText = await response.text()
+
+        if (payload.stream === true && shouldRetryWithoutStream(response.status, errorText)) {
+            console.log('当前图像接口不支持流式响应，自动回退到非流式模式')
+            payload.stream = false
             fetchOptions.body = JSON.stringify(payload)
             response = await fetch(apiEndpoint, fetchOptions)
         } else {
