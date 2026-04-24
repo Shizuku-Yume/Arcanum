@@ -15,6 +15,17 @@ function shouldRetryWithoutStream(status: number, errorText: string): boolean {
     )
 }
 
+function shouldRetryViaImagesEndpoint(status: number, errorText: string): boolean {
+    if (![400, 404, 422, 500, 501, 502, 503].includes(status)) return false
+
+    const message = String(errorText || '').toLowerCase()
+    return (
+        (message.includes('only supported on /v1/images/generations') && message.includes('/v1/images/edits'))
+        || (message.includes('only supported on') && message.includes('/v1/images/'))
+        || (message.includes('unsupported') && message.includes('/v1/images/'))
+    )
+}
+
 function guessMimeTypeFromUrl(url: string): string {
     const normalized = url.toLowerCase()
     if (normalized.includes('.webp')) return 'image/webp'
@@ -363,6 +374,9 @@ export async function generateImage(request: GenerateRequest, onProgress?: Progr
             payload.modalities = altModalities
             fetchOptions.body = JSON.stringify(payload)
             response = await fetch(apiEndpoint, fetchOptions)
+        } else if (shouldRetryViaImagesEndpoint(response.status, errorText)) {
+            console.log('检测到当前模型仅支持 /v1/images 接口，自动切换到 OpenAI Images 端点重试')
+            return generateImageViaOpenAIImages(request, onProgress)
         } else {
             throw new Error(`API error ${response.status}: ${errorText}`)
         }
@@ -376,6 +390,9 @@ export async function generateImage(request: GenerateRequest, onProgress?: Progr
             payload.stream = false
             fetchOptions.body = JSON.stringify(payload)
             response = await fetch(apiEndpoint, fetchOptions)
+        } else if (shouldRetryViaImagesEndpoint(response.status, errorText)) {
+            console.log('检测到当前模型仅支持 /v1/images 接口，自动切换到 OpenAI Images 端点重试')
+            return generateImageViaOpenAIImages(request, onProgress)
         } else {
             throw new Error(`API error ${response.status}: ${errorText}`)
         }
@@ -383,6 +400,10 @@ export async function generateImage(request: GenerateRequest, onProgress?: Progr
 
     if (!response.ok) {
         const errorText = await response.text()
+        if (shouldRetryViaImagesEndpoint(response.status, errorText)) {
+            console.log('聊天接口重试后仍提示仅支持 /v1/images，自动切换到 OpenAI Images 端点重试')
+            return generateImageViaOpenAIImages(request, onProgress)
+        }
         throw new Error(`API error ${response.status}: ${errorText}`)
     }
 

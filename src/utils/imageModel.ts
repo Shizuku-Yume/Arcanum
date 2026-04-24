@@ -1,9 +1,18 @@
 export type OpenAIImageQuality = 'low' | 'medium' | 'high'
 export type OpenAIImageAspectMode = 'square' | 'landscape' | 'portrait'
 
+function normalizeModelId(modelId: string): string {
+  return (modelId || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[._\s]+/g, '-')
+}
+
 export function isOpenAIImagesModel(modelId: string): boolean {
-  return /(^|[/:])gpt-image(?:-[\w.]+)?$/i.test(modelId)
-    || /^gpt-image(?:-[\w.]+)?$/i.test(modelId)
+  const normalized = normalizeModelId(modelId)
+  const lastSegment = normalized.split(/[/:]/).filter(Boolean).pop() || normalized
+
+  return /^gpt-image(?:-[a-z0-9]+)*$/i.test(lastSegment)
 }
 
 export function getOpenAIImageAspectMode(aspectRatio?: string): OpenAIImageAspectMode {
